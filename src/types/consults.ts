@@ -31,3 +31,25 @@ export interface Tenant {
   created_at: string
   updated_at: string
 }
+
+export interface Service {
+  id: number
+  tenant_id: number
+  category_id: number
+  name: string
+  price: string
+  duration_minutes: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Category {
+  id: number
+  tenant_id: number
+  name: string
+  description: string | null
+  active: number
+  created_at: string
+  updated_at: string
+  services: Service[]
+}

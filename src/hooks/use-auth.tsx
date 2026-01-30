@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 
 import axios from '@/lib/axios'
+import type { Schema } from '@/pages/auth/schemas'
 import { type ApiResponse } from '@/types/api-response'
 import { type BarberShop, type Tenant, type User } from '@/types/consults'
 
-interface AdminAuthState {
+interface AuthState {
   user: User | null
   token: string | null
   userRole: string | null // No seu Laravel é o campo 'role' da tabela users
@@ -14,8 +15,8 @@ interface AdminAuthState {
 
 const appMode = import.meta.env.VITE_APP_MODE
 
-export function useAdminAuth() {
-  const [state, setState] = useState<AdminAuthState>({
+export function useAuth() {
+  const [state, setState] = useState<AuthState>({
     user: null,
     token: localStorage.getItem('auth_token'),
     userRole: null,
@@ -25,11 +26,13 @@ export function useAdminAuth() {
 
   // URL base da sua API Laravel
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-  const tenantSlug = import.meta.env.VITE_TENANT_SLUG
+  const localTenantSlug = import.meta.env.VITE_TENANT_SLUG
 
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('auth_token')
+      const tenantSlug =
+        appMode === 'client' ? localTenantSlug : sessionStorage.getItem('active_tenant')
 
       if (!token || !tenantSlug) {
         setState((prev) => ({ ...prev, loading: false }))
@@ -87,6 +90,7 @@ export function useAdminAuth() {
       >(`${API_URL}/auth/login`, {
         email,
         password,
+        appMode,
       })
 
       const { data, message } = response.data
@@ -123,17 +127,16 @@ export function useAdminAuth() {
   }
 
   // Adaptado para o seu RegisterTenantController
-  const signUp = async (
-    name: string,
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; message: string }> => {
+  const signUp = async (signUpData: Schema): Promise<{ success: boolean; message: string }> => {
     try {
       if (appMode !== 'client') {
         const response = await axios.post<ApiResponse>(`${API_URL}/register-tenant`, {
-          name,
-          email,
-          password,
+          company_name: signUpData.company_name,
+          owner_name: signUpData.owner_name,
+          primary_color: signUpData.primary_color,
+          email: signUpData.email,
+          password: signUpData.password,
+          password_confirmation: signUpData.password,
         })
 
         const { message } = response.data
@@ -142,10 +145,10 @@ export function useAdminAuth() {
         return { success: true, message: message }
       } else {
         const response = await axios.post<ApiResponse>(`${API_URL}/auth/register`, {
-          name,
-          email,
-          password,
-          confirm_password: password,
+          name: signUpData.owner_name,
+          email: signUpData.email,
+          password: signUpData.password,
+          confirm_password: signUpData.password,
         })
 
         const { message } = response.data

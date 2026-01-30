@@ -1,15 +1,51 @@
 import { z } from 'zod'
 
-export const schema = z.object({
-  nome: z.string(), // obrigatório apenas no registro
-  email: z.string().min(1, 'O email é obrigatório'),
-  senha: z.string().min(1, 'A senha é obrigatória'),
-})
+export const schema = (registering: boolean) =>
+  z
+    .object({
+      company_name: z.string().optional(),
+      primary_color: z.string().optional(),
+      owner_name: z.string().optional(), // obrigatório apenas no registro
+      email: z.string().min(1, 'O email é obrigatório'),
+      password: z.string().min(1, 'A senha é obrigatória'),
+    })
+    .refine(
+      (data) => {
+        if (registering) {
+          return !!data.owner_name && data.owner_name.trim().length > 0
+        }
+        return true
+      },
+      {
+        message: 'O nome do proprietário é obrigatório',
+        path: ['owner_name'],
+      }
+    )
+    .refine(
+      (data) => {
+        if (registering) {
+          return !!data.company_name && data.company_name.trim().length > 0
+        }
+        return true
+      },
+      {
+        message: 'O nome da empresa é obrigatório',
+        path: ['company_name'],
+      }
+    )
+    .refine((data) => {
+      if (registering) {
+        return !!data.primary_color && data.primary_color.trim().length > 0
+      }
+      return true
+    })
 
-export type Schema = z.infer<typeof schema>
+export type Schema = z.infer<ReturnType<typeof schema>>
 
 export const defaultValues: Schema = {
-  nome: '',
+  company_name: '',
+  primary_color: '',
+  owner_name: '',
   email: '',
-  senha: '',
+  password: '',
 }

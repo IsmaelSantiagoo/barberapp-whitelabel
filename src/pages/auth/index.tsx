@@ -1,4 +1,7 @@
+import { useState } from 'react'
+
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Building2Icon, EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -17,22 +20,25 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input, PasswordInput } from '@/components/ui/input'
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { useAuth } from '@/hooks/use-auth'
 
 import { defaultValues, schema, type Schema } from './schemas'
 
 const appMode = import.meta.env.VITE_APP_MODE
 
 export default function AuthPage() {
+  const params = new URLSearchParams(window.location.search)
+  const [showPassword, setShowPassword] = useState(false)
+
   const form = useForm<Schema>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(params.get('register') === 'true')),
     defaultValues: defaultValues,
     mode: 'onSubmit',
   })
 
   const navigate = useNavigate()
-  const { signIn, signUp, loading, isAuthenticated } = useAdminAuth()
-  const params = new URLSearchParams(window.location.search)
+  const { signIn, signUp, loading, isAuthenticated } = useAuth()
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -43,7 +49,7 @@ export default function AuthPage() {
   const handleSubmit = async (data: Schema) => {
     if (params.get('register') === 'true') {
       try {
-        const { success, message } = await signUp(data.nome, data.email, data.senha)
+        const { success, message } = await signUp(data)
 
         if (!success) {
           toast.error(message)
@@ -57,7 +63,7 @@ export default function AuthPage() {
       }
     } else {
       try {
-        const { success, message } = await signIn(data.email, data.senha)
+        const { success, message } = await signIn(data.email, data.password)
 
         if (!success) {
           toast.error(message)
@@ -70,6 +76,10 @@ export default function AuthPage() {
         toast.error('Não foi possível fazer login. Tente novamente.')
       }
     }
+  }
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword)
   }
 
   if (loading) {
@@ -91,6 +101,54 @@ export default function AuthPage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
+                {params.get('register') === 'true' && (
+                  <FormField
+                    control={form.control}
+                    name='company_name'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className='flex justify-between'>Nome da Barbearia</FormLabel>
+
+                        <FormControl>
+                          <InputGroup>
+                            <InputGroupInput {...field} placeholder='Nome da sua barbearia' />
+                            <InputGroupAddon>
+                              <Building2Icon />
+                            </InputGroupAddon>
+                          </InputGroup>
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {params.get('register') === 'true' && (
+                  <FormField
+                    control={form.control}
+                    name='owner_name'
+                    render={(renderData) => {
+                      const { ref: _ref, ...field } = renderData.field
+
+                      return (
+                        <FormItem>
+                          <FormLabel>Nome</FormLabel>
+
+                          <FormControl>
+                            <InputGroup>
+                              <InputGroupInput {...field} placeholder='Digite seu nome' />
+                              <InputGroupAddon>
+                                <UserIcon />
+                              </InputGroupAddon>
+                            </InputGroup>
+                          </FormControl>
+
+                          <FormMessage />
+                        </FormItem>
+                      )
+                    }}
+                  />
+                )}
                 <FormField
                   control={form.control}
                   name='email'
@@ -102,7 +160,12 @@ export default function AuthPage() {
                         <FormLabel>Email</FormLabel>
 
                         <FormControl>
-                          <Input {...field} type='email' placeholder='email@exemplo.com' />
+                          <InputGroup>
+                            <InputGroupInput {...field} type='email' placeholder='seu@email.com' />
+                            <InputGroupAddon>
+                              <MailIcon />
+                            </InputGroupAddon>
+                          </InputGroup>
                         </FormControl>
 
                         <FormMessage />
@@ -112,7 +175,7 @@ export default function AuthPage() {
                 />
                 <FormField
                   control={form.control}
-                  name='senha'
+                  name='password'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='flex justify-between'>
@@ -123,7 +186,23 @@ export default function AuthPage() {
                       </FormLabel>
 
                       <FormControl>
-                        <PasswordInput {...field} placeholder='Digite sua senha' />
+                        <InputGroup>
+                          <InputGroupInput
+                            {...field}
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder='****'
+                          />
+                          <InputGroupAddon>
+                            <LockIcon />
+                          </InputGroupAddon>
+                          <InputGroupAddon align='inline-end' onClick={togglePassword}>
+                            {showPassword ? (
+                              <EyeIcon className='cursor-pointer' />
+                            ) : (
+                              <EyeOffIcon className='cursor-pointer' />
+                            )}
+                          </InputGroupAddon>
+                        </InputGroup>
                       </FormControl>
 
                       <FormMessage />
@@ -132,13 +211,22 @@ export default function AuthPage() {
                 />
 
                 <Field>
-                  <Button type='submit'>Login</Button>
-                  <Button variant='outline' type='button'>
+                  <Button className='cursor-pointer' type='submit'>
+                    {params.get('register') === 'true' ? 'Cadastrar' : 'Entrar'}
+                  </Button>
+                  <Button className='cursor-pointer' variant='outline' type='button'>
                     <GoogleLogo className='mr-2' />
-                    Entrar com o Google
+                    {params.get('register') === 'true'
+                      ? 'Cadastrar com Google'
+                      : 'Entrar com Google'}
                   </Button>
                   <FieldDescription className='text-center'>
-                    Não tem uma conta? <a href='#'>Cadastre-se</a>
+                    {params.get('register') === 'true'
+                      ? 'Já possui uma conta? '
+                      : 'Não possui uma conta? '}
+                    <a href={params.get('register') === 'true' ? '?' : '?register=true'}>
+                      {params.get('register') === 'true' ? 'Faça login' : 'Cadastre-se'}
+                    </a>
                   </FieldDescription>
                 </Field>
               </form>
@@ -167,7 +255,7 @@ export default function AuthPage() {
                 {params.get('register') === 'true' && (
                   <FormField
                     control={form.control}
-                    name='nome'
+                    name='owner_name'
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className='flex justify-between'>Nome</FormLabel>
@@ -207,7 +295,7 @@ export default function AuthPage() {
                 />
                 <FormField
                   control={form.control}
-                  name='senha'
+                  name='password'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className='flex justify-between'>

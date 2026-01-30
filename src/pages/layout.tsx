@@ -2,11 +2,11 @@ import { useEffect } from 'react'
 
 import { Outlet, useNavigate } from 'react-router-dom'
 
-import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function AppLayout() {
   const navigate = useNavigate()
-  const { loading, isAuthenticated } = useAdminAuth()
+  const { loading, isAuthenticated } = useAuth()
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
