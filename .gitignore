@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ambient Variables Files
+.env
+.env.production
+.env.development
+.env.local
