@@ -1,22 +1,28 @@
-import { createRoot } from "react-dom/client";
-import "./index.css";
+import { createRoot } from 'react-dom/client'
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider } from 'react-router-dom'
 
+import { Toaster } from './components/ui/sonner'
+import './index.css'
+import ThemeProvider from './providers/ThemeProvider'
 import router from './routes'
 
-const queryClient = new QueryClient();
+createRoot(document.getElementById('root')!).render(
+  <ThemeProvider defaultTheme='system' storageKey='theme'>
+    <RouterProvider router={router} />
 
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <RouterProvider router={router} />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    <Toaster
+      className='pointer-events-auto'
+      position='bottom-right'
+      visibleToasts={3}
+      expand={false}
+      richColors
+      toastOptions={{
+        classNames: {
+          toast:
+            '!bg-neutral-100 border !border-neutral-200 dark:!bg-neutral-800 dark:!border-neutral-700',
+        },
+      }}
+    />
+  </ThemeProvider>
+)

@@ -1,16 +1,13 @@
-import AdminLogin from '@/pages/admin/login'
-import { Navigate, type RouteObject } from 'react-router'
+import { type RouteObject } from 'react-router'
 
-export const AdminAuthRoutes: RouteObject = {
+import AdminDashboard from '@/pages/admin/dashboard'
+
+export const AdminRoutes: RouteObject = {
   path: 'admin',
   children: [
     {
-      path: 'login',
-      element: <AdminLogin />,
-    },
-    {
-      path: '*',
-      element: <Navigate to='/admin/login' replace />,
+      path: 'dashboard',
+      element: <AdminDashboard />,
     },
   ],
 }

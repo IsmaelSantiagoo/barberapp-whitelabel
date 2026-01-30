@@ -1,16 +1,13 @@
-import ClientLogin from '@/pages/client/login'
-import { Navigate, type RouteObject } from 'react-router'
+import { type RouteObject } from 'react-router'
 
-export const ClientAuthRoutes: RouteObject = {
-  path: 'auth',
+import ClientHome from '@/pages/client'
+
+export const ClientRoutes: RouteObject = {
+  path: '',
   children: [
     {
-      path: 'login',
-      element: <ClientLogin />,
-    },
-    {
-      path: '*',
-      element: <Navigate to='/auth/login' replace />,
+      path: 'home',
+      element: <ClientHome />,
     },
   ],
 }

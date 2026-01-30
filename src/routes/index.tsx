@@ -1,12 +1,14 @@
+import AppLayout from '../pages/layout'
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
 
-import AppLayout from '../pages/layout'
-import { AdminAuthRoutes } from './admin'
-import { ClientAuthRoutes } from './client'
+import { AdminRoutes } from './admin'
+import { AuthRoute } from './auth'
+import { ClientRoutes } from './client'
 
-const unprotectedRoutes: RouteObject[] = [AdminAuthRoutes, ClientAuthRoutes]
+const appMode = import.meta.env.VITE_APP_MODE
+const unprotectedRoutes: RouteObject[] = [AuthRoute]
 
-const protectedRoutes: RouteObject[] = []
+const protectedRoutes: RouteObject[] = [appMode === 'admin' ? AdminRoutes : ClientRoutes]
 
 const router = createBrowserRouter([
   ...unprotectedRoutes,
@@ -20,9 +22,7 @@ const router = createBrowserRouter([
       {
         path: 'pages',
         element: <AppLayout />,
-        children: [
-          ...protectedRoutes,
-        ],
+        children: [...protectedRoutes],
       },
       {
         path: '*',
