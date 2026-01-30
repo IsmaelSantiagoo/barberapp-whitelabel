@@ -25,11 +25,11 @@ export function useAdminAuth() {
 
   // URL base da sua API Laravel
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+  const tenantSlug = import.meta.env.VITE_TENANT_SLUG
 
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('auth_token')
-      const tenantSlug = sessionStorage.getItem('active_tenant')
 
       if (!token || !tenantSlug) {
         setState((prev) => ({ ...prev, loading: false }))
@@ -52,9 +52,6 @@ export function useAdminAuth() {
             barbershop: data.tenant,
             loading: false,
           })
-
-          window.location.href = `/admin/dashboard`
-          console.log('Redirecionando para /admin/dashboard')
         } else {
           // Token inválido ou expirado
           logoutCleanup()

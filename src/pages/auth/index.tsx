@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import GoogleLogo from '@/assets/google.svg?react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription } from '@/components/ui/field'
 import {
   Form,
@@ -19,6 +20,8 @@ import { Input, PasswordInput } from '@/components/ui/input'
 import { useAdminAuth } from '@/hooks/use-admin-auth'
 
 import { defaultValues, schema, type Schema } from './schemas'
+
+const appMode = import.meta.env.VITE_APP_MODE
 
 export default function AuthPage() {
   const form = useForm<Schema>({
@@ -73,6 +76,75 @@ export default function AuthPage() {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <p className='text-muted-foreground'>Carregando...</p>
+      </div>
+    )
+  }
+
+  if (appMode === 'admin') {
+    return (
+      <div className='flex flex-col h-screen items-center justify-center'>
+        <Card className='w-full max-w-sm'>
+          <CardHeader>
+            <CardTitle>Entre na sua conta</CardTitle>
+            <CardDescription>Entre com seu email abaixo para acessar sua conta</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
+                <FormField
+                  control={form.control}
+                  name='email'
+                  render={(renderData) => {
+                    const { ref: _ref, ...field } = renderData.field
+
+                    return (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+
+                        <FormControl>
+                          <Input {...field} type='email' placeholder='email@exemplo.com' />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )
+                  }}
+                />
+                <FormField
+                  control={form.control}
+                  name='senha'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='flex justify-between'>
+                        Senha
+                        {params.get('register') !== 'true' && (
+                          <a href='/forgot-password'>Esqueceu sua senha?</a>
+                        )}
+                      </FormLabel>
+
+                      <FormControl>
+                        <PasswordInput {...field} placeholder='Digite sua senha' />
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Field>
+                  <Button type='submit'>Login</Button>
+                  <Button variant='outline' type='button'>
+                    <GoogleLogo className='mr-2' />
+                    Entrar com o Google
+                  </Button>
+                  <FieldDescription className='text-center'>
+                    Não tem uma conta? <a href='#'>Cadastre-se</a>
+                  </FieldDescription>
+                </Field>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
     )
   }
