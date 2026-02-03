@@ -20,7 +20,7 @@ import { useAuth } from '@/hooks/use-auth'
 
 export function SidebarUser() {
   const { isMobile } = useSidebar()
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
 
   return (
     <SidebarMenu>
@@ -84,7 +84,7 @@ export function SidebarUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={signOut}>
               <LogOutIcon />
               Sair
             </DropdownMenuItem>

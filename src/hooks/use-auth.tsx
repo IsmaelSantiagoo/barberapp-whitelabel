@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { toast } from 'sonner'
+
 import axios from '@/lib/axios'
 import type { Schema } from '@/pages/auth/schemas'
 import { type ApiResponse } from '@/types/api-response'
@@ -118,7 +120,16 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
-      await axios.post<ApiResponse>(`${API_URL}/auth/logout`)
+      const response = await axios.get<ApiResponse>(`${API_URL}/auth/logout`)
+
+      if (response.data.success) {
+        window.location.href = '/auth/login'
+      } else {
+        toast.error(
+          response.data.message ||
+            'Erro ao deslogar. Entre em contato com o suporte caso o erro persista.'
+        )
+      }
     } catch (e) {
       console.error('Erro ao deslogar no servidor', e)
     } finally {
