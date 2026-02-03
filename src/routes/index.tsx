@@ -17,20 +17,16 @@ const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: (
-          <Navigate to={appMode === 'admin' ? '/admin/dashboard' : '/client/home'} replace />
-        ),
+        element: <Navigate to={appMode === 'admin' ? '/admin/dashboard' : '/home'} replace />,
       },
       {
-        path: appMode === 'admin' ? 'admin' : 'client',
+        path: appMode === 'admin' ? 'admin' : '',
         element: <AppLayout />,
         children: [...protectedRoutes],
       },
       {
         path: '*',
-        element: (
-          <Navigate to={appMode === 'admin' ? '/admin/dashboard' : '/client/home'} replace />
-        ),
+        element: <Navigate to={appMode === 'admin' ? '/admin/dashboard' : '/home'} replace />,
       },
     ],
   },

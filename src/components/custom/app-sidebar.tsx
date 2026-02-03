@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { LayoutDashboardIcon, ScissorsIcon, SettingsIcon } from 'lucide-react'
+import { ClockIcon, LayoutDashboardIcon, ScissorsIcon, SettingsIcon } from 'lucide-react'
 
 import {
   Sidebar,
@@ -28,6 +28,11 @@ const data = {
       title: 'Dashboard',
       url: '/admin/dashboard',
       icon: LayoutDashboardIcon,
+    },
+    {
+      title: 'Horários',
+      url: '/admin/horarios',
+      icon: ClockIcon,
     },
   ],
   sidebarSecondary: [

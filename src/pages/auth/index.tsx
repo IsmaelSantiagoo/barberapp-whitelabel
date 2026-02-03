@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import GoogleLogo from '@/assets/google.svg?react'
+import Loader from '@/components/custom/loader'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -85,7 +86,7 @@ export default function AuthPage() {
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
-        <p className='text-muted-foreground'>Carregando...</p>
+        <Loader showMessage={true} />
       </div>
     )
   }

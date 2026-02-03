@@ -77,7 +77,7 @@ export default function AdminDashboard() {
                 <CalendarIcon className='h-5 w-5 text-blue-600 dark:text-white' />
               </div>
               <div>
-                <p className='text-2xl font-bold'>{stats.today}</p>
+                <p className='text-2xl font-bold'>{spinners.general ? '...' : stats.today}</p>
                 <p className='text-sm text-muted-foreground'>Hoje</p>
               </div>
             </CardContent>
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
                 <AlertCircleIcon className='h-5 w-5 text-yellow-600 dark:text-white' />
               </div>
               <div>
-                <p className='text-2xl font-bold'>{stats.pending}</p>
+                <p className='text-2xl font-bold'>{spinners.general ? '...' : stats.pending}</p>
                 <p className='text-sm text-muted-foreground'>Pendentes</p>
               </div>
             </CardContent>
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                 <CheckCircle2Icon className='h-5 w-5 text-green-600 dark:text-white' />
               </div>
               <div>
-                <p className='text-2xl font-bold'>{stats.confirmed}</p>
+                <p className='text-2xl font-bold'>{spinners.general ? '...' : stats.confirmed}</p>
                 <p className='text-sm text-muted-foreground'>Confirmados</p>
               </div>
             </CardContent>

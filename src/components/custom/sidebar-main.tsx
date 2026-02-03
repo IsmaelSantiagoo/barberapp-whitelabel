@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router'
+
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,13 +18,15 @@ export function SidebarMain({
     icon?: React.ElementType
   }[]
 }) {
+  const navigate = useNavigate()
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Menus</SidebarGroupLabel>
       <SidebarGroupContent className='flex flex-col gap-2'>
         <SidebarMenu>
           {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
+            <SidebarMenuItem onClick={() => navigate(item.url)} key={item.title}>
               <SidebarMenuButton tooltip={item.title}>
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>

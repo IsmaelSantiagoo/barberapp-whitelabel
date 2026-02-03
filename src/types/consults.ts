@@ -7,11 +7,11 @@ export interface User {
   first_access: number
   created_at: string
   updated_at: string
-  tenant_id: number
+  barbershop_id: string
 }
 
 export interface BarberShop {
-  id: number
+  id: string
   company_name: string
   slug: string
   domain: string | null
@@ -19,22 +19,12 @@ export interface BarberShop {
   logo_url: string | null
   created_at: string
   updated_at: string
-}
-
-export interface Tenant {
-  id: number
-  company_name: string
-  slug: string
-  domain: string | null
-  primary_color: string
-  logo_url: string | null
-  created_at: string
-  updated_at: string
+  business_hours: BusinessHour[]
 }
 
 export interface Service {
   id: number
-  tenant_id: number
+  barbershop_id: string
   category_id: number
   name: string
   price: string
@@ -45,7 +35,7 @@ export interface Service {
 
 export interface Category {
   id: number
-  tenant_id: number
+  barbershop_id: string
   name: string
   description: string | null
   active: number
@@ -56,7 +46,7 @@ export interface Category {
 
 export interface Appointment {
   id: number
-  tenant_id: string
+  barbershop_id: string
   customer_id: number
   service_id: number
   date: string
@@ -67,4 +57,15 @@ export interface Appointment {
   updated_at: string
   service: Service
   customer: User
+}
+
+export interface BusinessHour {
+  id: string
+  barbershop_id: string
+  day_of_week: number
+  open_time: string
+  close_time: string
+  is_open: boolean
+  created_at: string | null
+  updated_at: string | null
 }

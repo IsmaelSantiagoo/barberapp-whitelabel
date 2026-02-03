@@ -24,7 +24,7 @@ export default function AppLayout() {
     return (
       <HeaderProvider>
         <div className='flex flex-1 flex-col'>
-          <div className='@container/main flex flex-1 flex-col gap-2 p-6 dark:bg-black'>
+          <div className='@container/main flex flex-1 flex-col gap-2'>
             <Outlet />
           </div>
         </div>

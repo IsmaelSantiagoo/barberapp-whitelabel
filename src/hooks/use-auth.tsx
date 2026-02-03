@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import axios from '@/lib/axios'
 import type { Schema } from '@/pages/auth/schemas'
 import { type ApiResponse } from '@/types/api-response'
-import { type BarberShop, type Tenant, type User } from '@/types/consults'
+import { type BarberShop, type User } from '@/types/consults'
 
 interface AuthState {
   user: User | null
@@ -28,33 +28,33 @@ export function useAuth() {
 
   // URL base da sua API Laravel
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-  const localTenantSlug = import.meta.env.VITE_TENANT_SLUG
+  const localBarbershopSlug = import.meta.env.VITE_BARBERSHOP_SLUG
 
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('auth_token')
-      const tenantSlug =
-        appMode === 'client' ? localTenantSlug : sessionStorage.getItem('active_tenant')
+      const barbershopSlug =
+        appMode === 'client' ? localBarbershopSlug : sessionStorage.getItem('active_barbershop')
 
-      if (!token || !tenantSlug) {
+      if (!token || !barbershopSlug) {
         setState((prev) => ({ ...prev, loading: false }))
         return
       }
 
       try {
         // Chamada para o método 'auth/me' que criamos no Laravel
-        const response = await axios.get<ApiResponse<User & { tenant: Tenant }>>(
+        const response = await axios.get<ApiResponse<User & { barbershop: BarberShop }>>(
           `${API_URL}/auth/me`
         )
 
         if (response.data.success) {
           const { data } = response.data
-          // data.user e data.tenant vêm do seu AuthController@me
+          // data.user e data.barbershop vêm do seu AuthController@me
           setState({
             user: data,
             token: token,
             userRole: data.role,
-            barbershop: data.tenant,
+            barbershop: data.barbershop,
             loading: false,
           })
         } else {
@@ -72,7 +72,7 @@ export function useAuth() {
 
   const logoutCleanup = () => {
     localStorage.removeItem('auth_token')
-    sessionStorage.removeItem('active_tenant')
+    sessionStorage.removeItem('active_barbershop')
     setState({
       user: null,
       token: null,
@@ -88,7 +88,7 @@ export function useAuth() {
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<
-        ApiResponse<{ user: User; tenant: Tenant; access_token: string }>
+        ApiResponse<{ user: User; barbershop: BarberShop; access_token: string }>
       >(`${API_URL}/auth/login`, {
         email,
         password,
@@ -102,13 +102,13 @@ export function useAuth() {
       // Salvando no localStorage para persistência
       localStorage.setItem('auth_token', data.access_token)
       localStorage.setItem('user_role', data.user.role)
-      sessionStorage.setItem('active_tenant', data.tenant.slug)
+      sessionStorage.setItem('active_barbershop', data.barbershop.slug)
 
       setState({
         user: data.user,
         token: data.access_token,
         userRole: data.user.role,
-        barbershop: data.tenant,
+        barbershop: data.barbershop,
         loading: false,
       })
 
@@ -137,11 +137,11 @@ export function useAuth() {
     }
   }
 
-  // Adaptado para o seu RegisterTenantController
+  // Adaptado para o seu RegisterBarbershopController
   const signUp = async (signUpData: Schema): Promise<{ success: boolean; message: string }> => {
     try {
       if (appMode !== 'client') {
-        const response = await axios.post<ApiResponse>(`${API_URL}/register-tenant`, {
+        const response = await axios.post<ApiResponse>(`${API_URL}/register-barbershop`, {
           company_name: signUpData.company_name,
           owner_name: signUpData.owner_name,
           primary_color: signUpData.primary_color,
