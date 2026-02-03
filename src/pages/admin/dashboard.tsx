@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { AlertCircleIcon, CalendarIcon, CheckCircle2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 
+import Loader from '@/components/custom/loader'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useHeader } from '@/hooks/use-header'
@@ -115,7 +116,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             {spinners.general ? (
-              <p className='text-muted-foreground'>Carregando...</p>
+              <Loader showMessage={true} message='Carregando agendamentos...' />
             ) : stats.today === 0 ? (
               <p className='text-muted-foreground'>Nenhum agendamento para hoje</p>
             ) : (
