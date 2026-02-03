@@ -1,7 +1,13 @@
+import { useEffect } from 'react'
+
+import { useHeader } from '@/hooks/use-header'
+
 export default function AdminDashboard() {
-  return (
-    <div>
-      <h1>Admin Dashboard</h1>
-    </div>
-  )
+  const { setPageTitle } = useHeader()
+
+  useEffect(() => {
+    setPageTitle('Dashboard')
+  }, [])
+
+  return <div></div>
 }
