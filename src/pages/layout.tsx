@@ -8,6 +8,8 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
 import { HeaderProvider } from '@/providers/HeaderProvider'
 
+const appMode = import.meta.env.VITE_APP_MODE
+
 export default function AppLayout() {
   const navigate = useNavigate()
   const { loading, isAuthenticated } = useAuth()
@@ -17,6 +19,18 @@ export default function AppLayout() {
       navigate('/auth/login')
     }
   }, [loading, isAuthenticated, navigate])
+
+  if (appMode === 'client') {
+    return (
+      <HeaderProvider>
+        <div className='flex flex-1 flex-col'>
+          <div className='@container/main flex flex-1 flex-col gap-2 p-6 dark:bg-black'>
+            <Outlet />
+          </div>
+        </div>
+      </HeaderProvider>
+    )
+  }
 
   return (
     <HeaderProvider>
