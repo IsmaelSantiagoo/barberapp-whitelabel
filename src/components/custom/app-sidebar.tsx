@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { useAuth } from '@/hooks/use-auth'
 
 import { SidebarMain } from './sidebar-main'
 import { SidebarSecondary } from './sidebar-secondary'
@@ -25,7 +26,7 @@ const data = {
   sidebarPrimary: [
     {
       title: 'Dashboard',
-      url: '#',
+      url: '/admin/dashboard',
       icon: LayoutDashboardIcon,
     },
   ],
@@ -39,15 +40,17 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { barbershop } = useAuth()
+
   return (
     <Sidebar collapsible='offcanvas' {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className='data-[slot=sidebar-menu-button]:p-1.5!'>
-              <a href='#'>
+              <a href='/admin/dashboard'>
                 <ScissorsIcon className='size-5!' />
-                <span className='text-base font-semibold'>BarberApp</span>
+                <span className='text-base font-semibold'>{barbershop?.company_name}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -58,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarSecondary items={data.sidebarSecondary} className='mt-auto' />
       </SidebarContent>
       <SidebarFooter>
-        <SidebarUser user={data.user} />
+        <SidebarUser />
       </SidebarFooter>
     </Sidebar>
   )

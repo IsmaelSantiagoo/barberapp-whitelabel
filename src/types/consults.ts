@@ -53,3 +53,18 @@ export interface Category {
   updated_at: string
   services: Service[]
 }
+
+export interface Appointment {
+  id: number
+  tenant_id: string
+  customer_id: number
+  service_id: number
+  date: string
+  time: string
+  status: string
+  notes: string | null
+  created_at: string
+  updated_at: string
+  service: Service
+  customer: User
+}

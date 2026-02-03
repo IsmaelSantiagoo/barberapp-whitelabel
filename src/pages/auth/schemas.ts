@@ -33,18 +33,24 @@ export const schema = (registering: boolean) =>
         path: ['company_name'],
       }
     )
-    .refine((data) => {
-      if (registering) {
-        return !!data.primary_color && data.primary_color.trim().length > 0
+    .refine(
+      (data) => {
+        if (registering) {
+          return !!data.primary_color && data.primary_color.trim().length > 0
+        }
+        return true
+      },
+      {
+        message: 'A cor principal é obrigatória',
+        path: ['primary_color'],
       }
-      return true
-    })
+    )
 
 export type Schema = z.infer<ReturnType<typeof schema>>
 
 export const defaultValues: Schema = {
   company_name: '',
-  primary_color: '',
+  primary_color: '#000000',
   owner_name: '',
   email: '',
   password: '',

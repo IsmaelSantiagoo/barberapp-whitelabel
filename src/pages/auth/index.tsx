@@ -58,8 +58,8 @@ export default function AuthPage() {
 
         navigate('/admin/dashboard')
       } catch (error) {
-        console.error('Login error:', error)
-        toast.error('Não foi possível fazer login. Tente novamente.')
+        console.error('Register error:', error)
+        toast.error('Não foi possível fazer registro. Tente novamente.')
       }
     } else {
       try {
@@ -107,7 +107,7 @@ export default function AuthPage() {
                     name='company_name'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className='flex justify-between'>Nome da Barbearia</FormLabel>
+                        <FormLabel required>Nome da Barbearia</FormLabel>
 
                         <FormControl>
                           <InputGroup>
@@ -126,13 +126,35 @@ export default function AuthPage() {
                 {params.get('register') === 'true' && (
                   <FormField
                     control={form.control}
+                    name='primary_color'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cor Principal</FormLabel>
+
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type='color'
+                            placeholder='Selecione uma cor'
+                            className='h-12'
+                          />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                {params.get('register') === 'true' && (
+                  <FormField
+                    control={form.control}
                     name='owner_name'
                     render={(renderData) => {
                       const { ref: _ref, ...field } = renderData.field
 
                       return (
                         <FormItem>
-                          <FormLabel>Nome</FormLabel>
+                          <FormLabel required>Nome</FormLabel>
 
                           <FormControl>
                             <InputGroup>
@@ -157,7 +179,7 @@ export default function AuthPage() {
 
                     return (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel required>Email</FormLabel>
 
                         <FormControl>
                           <InputGroup>
@@ -178,12 +200,15 @@ export default function AuthPage() {
                   name='password'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className='flex justify-between'>
-                        Senha
-                        {params.get('register') !== 'true' && (
-                          <a href='/forgot-password'>Esqueceu sua senha?</a>
-                        )}
-                      </FormLabel>
+                      <div className='flex justify-between'>
+                        <FormLabel required>Senha</FormLabel>
+
+                        <span className='text-sm text-primary/50'>
+                          {params.get('register') !== 'true' && (
+                            <a href='/forgot-password'>Esqueceu sua senha?</a>
+                          )}
+                        </span>
+                      </div>
 
                       <FormControl>
                         <InputGroup>
@@ -258,7 +283,7 @@ export default function AuthPage() {
                     name='owner_name'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className='flex justify-between'>Nome</FormLabel>
+                        <FormLabel required>Nome</FormLabel>
 
                         <FormControl>
                           <Input {...field} placeholder='Digite seu nome' className='h-12' />
@@ -277,7 +302,7 @@ export default function AuthPage() {
 
                     return (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel required>Email</FormLabel>
 
                         <FormControl>
                           <Input
@@ -298,12 +323,15 @@ export default function AuthPage() {
                   name='password'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className='flex justify-between'>
-                        Senha
-                        {params.get('register') !== 'true' && (
-                          <a href='/forgot-password'>Esqueceu sua senha?</a>
-                        )}
-                      </FormLabel>
+                      <div className='flex justify-between'>
+                        <FormLabel required>Senha</FormLabel>
+
+                        <span className='text-sm text-primary/50'>
+                          {params.get('register') !== 'true' && (
+                            <a href='/forgot-password'>Esqueceu sua senha?</a>
+                          )}
+                        </span>
+                      </div>
 
                       <FormControl>
                         <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
