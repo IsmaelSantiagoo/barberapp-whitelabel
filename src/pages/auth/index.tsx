@@ -60,7 +60,7 @@ export default function AuthPage() {
 
       try {
         const response = await axios.get<ApiResponse<BarberShop>>(
-          `${API_URL}/barbershops/${localBarbershopSlug}`
+          `${API_URL}/barber-shops/${localBarbershopSlug}`
         )
 
         if (response.data.success && response.data.data) {
