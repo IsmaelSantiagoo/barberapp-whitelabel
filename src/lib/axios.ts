@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 
 const appMode = import.meta.env.VITE_APP_MODE
 const apiBaseUrl = import.meta.env.VITE_API_URL
-const localBarbershopSlug = import.meta.env.VITE_BARBERSHOP_SLUG
+const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 
 if (!apiBaseUrl) throw new Error('VITE_API_URL is not defined')
 
@@ -18,13 +18,13 @@ const axios = vanillaAxios.create({
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
-  const barbershopSlug =
-    appMode === 'client' ? localBarbershopSlug : sessionStorage.getItem('active_barbershop')
+  const barbershopId =
+    appMode === 'client' ? localBarbershopId : sessionStorage.getItem('active_barbershop_id')
 
   config.headers = config.headers || ({} as AxiosRequestHeaders)
 
   if (token) config.headers.Authorization = `Bearer ${token}`
-  if (barbershopSlug) config.headers['X-Barbershop-Slug'] = barbershopSlug
+  if (barbershopId) config.headers['X-Barbershop-ID'] = barbershopId
 
   return config
 })

@@ -33,7 +33,7 @@ import { defaultValues, schema, type Schema } from './schemas'
 
 const appMode = import.meta.env.VITE_APP_MODE
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-const localBarbershopSlug = import.meta.env.VITE_BARBERSHOP_SLUG
+const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 
 export default function AuthPage() {
   const { tokens } = useTheme()
@@ -55,7 +55,7 @@ export default function AuthPage() {
   // Verifica se a barbearia existe (apenas no modo client)
   useEffect(() => {
     const checkBarbershop = async () => {
-      if (appMode !== 'client' || !localBarbershopSlug) {
+      if (appMode !== 'client' || !localBarbershopId) {
         setCheckingBarbershop(false)
         setBarbershopExists(true)
         return
@@ -63,7 +63,7 @@ export default function AuthPage() {
 
       try {
         const response = await axios.get<ApiResponse<BarberShop>>(
-          `${API_URL}/barber-shops/${localBarbershopSlug}`
+          `${API_URL}/barber-shops/${localBarbershopId}`
         )
 
         if (response.data.success && response.data.data) {

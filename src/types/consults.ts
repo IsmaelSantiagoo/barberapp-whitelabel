@@ -13,7 +13,6 @@ export interface User {
 export interface BarberShop {
   id: string
   company_name: string
-  slug: string
   domain: string | null
   primary_color: string
   logo_url: string | null

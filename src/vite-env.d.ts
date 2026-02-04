@@ -12,7 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_REVERB_PORT: string
   readonly VITE_REVERB_SCHEME: 'http' | 'https'
 
-  readonly VITE_BARBERSHOP_SLUG: string
+  readonly VITE_BARBERSHOP_ID: string
   readonly VITE_APP_MODE: 'client' | 'admin'
 }
 

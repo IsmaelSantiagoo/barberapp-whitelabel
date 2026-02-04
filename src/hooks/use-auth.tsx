@@ -28,15 +28,15 @@ export function useAuth() {
 
   // URL base da sua API Laravel
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-  const localBarbershopSlug = import.meta.env.VITE_BARBERSHOP_SLUG
+  const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 
   useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('auth_token')
-      const barbershopSlug =
-        appMode === 'client' ? localBarbershopSlug : sessionStorage.getItem('active_barbershop')
+      const barbershopId =
+        appMode === 'client' ? localBarbershopId : sessionStorage.getItem('active_barbershop_id')
 
-      if (!token || !barbershopSlug) {
+      if (!token || !barbershopId) {
         setState((prev) => ({ ...prev, loading: false }))
         return
       }
@@ -72,7 +72,7 @@ export function useAuth() {
 
   const logoutCleanup = () => {
     localStorage.removeItem('auth_token')
-    sessionStorage.removeItem('active_barbershop')
+    sessionStorage.removeItem('active_barbershop_id')
     setState({
       user: null,
       token: null,
@@ -102,7 +102,7 @@ export function useAuth() {
       // Salvando no localStorage para persistência
       localStorage.setItem('auth_token', data.access_token)
       localStorage.setItem('user_role', data.user.role)
-      sessionStorage.setItem('active_barbershop', data.barbershop.slug)
+      sessionStorage.setItem('active_barbershop_id', data.barbershop.id)
 
       setState({
         user: data.user,

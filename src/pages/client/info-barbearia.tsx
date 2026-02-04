@@ -1,5 +1,5 @@
 import { ArrowLeft, Clock, Instagram, MapPin, Phone } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/use-auth'
 const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
 export default function ClientInfoBarbershop() {
-  const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { barbershop, loading } = useAuth()
 
@@ -31,7 +30,7 @@ export default function ClientInfoBarbershop() {
       {/* Header */}
       <header className='border-b p-4'>
         <div className='flex items-center gap-4'>
-          <Button variant='ghost' size='icon' onClick={() => navigate(`/b/${slug}`)}>
+          <Button variant='ghost' size='icon' onClick={() => navigate(`/home`)}>
             <ArrowLeft className='h-5 w-5' />
           </Button>
           <h1 className='font-semibold'>Informações</h1>

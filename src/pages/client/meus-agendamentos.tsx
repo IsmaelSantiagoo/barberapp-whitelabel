@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { format, isBefore, parseISO, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ArrowLeft, Calendar, CalendarIcon, ClockIcon, XIcon } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import Loader from '@/components/custom/loader'
@@ -26,7 +26,6 @@ import type { ApiResponse } from '@/types/api-response'
 import type { Appointment } from '@/types/consults'
 
 export default function MyAppointments() {
-  const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { tokens } = useTheme()
 
@@ -104,7 +103,7 @@ export default function MyAppointments() {
       {/* Header */}
       <header className='border-b p-4'>
         <div className='flex items-center gap-4'>
-          <Button variant='ghost' size='icon' onClick={() => navigate(`/b/${slug}`)}>
+          <Button variant='ghost' size='icon' onClick={() => navigate(`/home`)}>
             <ArrowLeft className='h-5 w-5' />
           </Button>
           <h1 className='font-semibold'>Meus Agendamentos</h1>
