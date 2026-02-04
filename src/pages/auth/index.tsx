@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2Icon, EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from 'lucide-react'
@@ -23,14 +23,22 @@ import {
 import { Input, PasswordInput } from '@/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { useAuth } from '@/hooks/use-auth'
+import axios from '@/lib/axios'
+import NotFound from '@/pages/NotFound'
+import type { ApiResponse } from '@/types/api-response'
+import type { BarberShop } from '@/types/consults'
 
 import { defaultValues, schema, type Schema } from './schemas'
 
 const appMode = import.meta.env.VITE_APP_MODE
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const localBarbershopSlug = import.meta.env.VITE_BARBERSHOP_SLUG
 
 export default function AuthPage() {
   const params = new URLSearchParams(window.location.search)
   const [showPassword, setShowPassword] = useState(false)
+  const [barbershopExists, setBarbershopExists] = useState<boolean | null>(null)
+  const [checkingBarbershop, setCheckingBarbershop] = useState(appMode === 'client')
 
   const form = useForm<Schema>({
     resolver: zodResolver(schema(params.get('register') === 'true')),
@@ -41,10 +49,54 @@ export default function AuthPage() {
   const navigate = useNavigate()
   const { signIn, signUp, loading, isAuthenticated } = useAuth()
 
+  // Verifica se a barbearia existe (apenas no modo client)
+  useEffect(() => {
+    const checkBarbershop = async () => {
+      if (appMode !== 'client' || !localBarbershopSlug) {
+        setCheckingBarbershop(false)
+        setBarbershopExists(true)
+        return
+      }
+
+      try {
+        const response = await axios.get<ApiResponse<BarberShop>>(
+          `${API_URL}/barbershops/${localBarbershopSlug}`
+        )
+
+        if (response.data.success && response.data.data) {
+          setBarbershopExists(true)
+        } else {
+          setBarbershopExists(false)
+        }
+      } catch (error) {
+        console.error('Erro ao verificar barbearia:', error)
+        setBarbershopExists(false)
+      } finally {
+        setCheckingBarbershop(false)
+      }
+    }
+
+    checkBarbershop()
+  }, [])
+
   // Redirect if already authenticated
   if (isAuthenticated) {
     navigate('/admin/dashboard')
     return null
+  }
+
+  // Mostra loader enquanto verifica a barbearia
+  if (checkingBarbershop) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <Loader showMessage={true} />
+      </div>
+    )
+  }
+
+  // Se barbearia não existe (apenas no modo client)
+  if (appMode === 'client' && barbershopExists === false) {
+    return <NotFound />
   }
 
   const handleSubmit = async (data: Schema) => {
