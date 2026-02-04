@@ -18,7 +18,10 @@ const ThemeProvider = ({
   storageKey = 'theme',
 }: ThemeProviderProps) => {
   const { barbershop } = useAuth()
-  const barbershopPrimaryColor = barbershop?.primary_color || '#ffffff'
+  const [primaryColorOverride, setPrimaryColorOverride] = useState<string>(() => {
+    return localStorage.getItem('barbershop_primary_color') || ''
+  })
+  const barbershopPrimaryColor = barbershop?.primary_color || primaryColorOverride || '#ffffff'
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
@@ -34,12 +37,26 @@ const ThemeProvider = ({
     root.classList.add(resolvedTheme)
   }, [resolvedTheme])
 
-  // Aplica os tokens de cor como CSS variables
   useEffect(() => {
-    const root = document.documentElement
-    root.style.setProperty('--primary', barbershopPrimaryColor)
-    root.style.setProperty('--primary-foreground', getReadableTextColor(barbershopPrimaryColor))
-  }, [barbershopPrimaryColor])
+    if (barbershop?.primary_color) {
+      localStorage.setItem('barbershop_primary_color', barbershop.primary_color)
+      setPrimaryColorOverride(barbershop.primary_color)
+    }
+  }, [barbershop])
+
+  useEffect(() => {
+    const handleColorChange = () => {
+      setPrimaryColorOverride(localStorage.getItem('barbershop_primary_color') || '')
+    }
+
+    window.addEventListener('storage', handleColorChange)
+    window.addEventListener('barbershop-color-change', handleColorChange)
+
+    return () => {
+      window.removeEventListener('storage', handleColorChange)
+      window.removeEventListener('barbershop-color-change', handleColorChange)
+    }
+  }, [])
 
   const tokens = useMemo(() => {
     const onPrimary = getReadableTextColor(barbershopPrimaryColor)

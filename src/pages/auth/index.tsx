@@ -23,6 +23,7 @@ import {
 import { Input, PasswordInput } from '@/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { useAuth } from '@/hooks/use-auth'
+import { useTheme } from '@/hooks/use-theme'
 import axios from '@/lib/axios'
 import NotFound from '@/pages/NotFound'
 import type { ApiResponse } from '@/types/api-response'
@@ -35,6 +36,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const localBarbershopSlug = import.meta.env.VITE_BARBERSHOP_SLUG
 
 export default function AuthPage() {
+  const { tokens } = useTheme()
+
   const params = new URLSearchParams(window.location.search)
   const [showPassword, setShowPassword] = useState(false)
   const [barbershopExists, setBarbershopExists] = useState<boolean | null>(null)
@@ -64,12 +67,23 @@ export default function AuthPage() {
         )
 
         if (response.data.success && response.data.data) {
+          const primaryColor = response.data.data.primary_color
+
+          if (primaryColor) {
+            localStorage.setItem('barbershop_primary_color', primaryColor)
+            window.dispatchEvent(new Event('barbershop-color-change'))
+          }
+
           setBarbershopExists(true)
         } else {
+          localStorage.removeItem('barbershop_primary_color')
+          window.dispatchEvent(new Event('barbershop-color-change'))
           setBarbershopExists(false)
         }
       } catch (error) {
         console.error('Erro ao verificar barbearia:', error)
+        localStorage.removeItem('barbershop_primary_color')
+        window.dispatchEvent(new Event('barbershop-color-change'))
         setBarbershopExists(false)
       } finally {
         setCheckingBarbershop(false)
@@ -312,7 +326,15 @@ export default function AuthPage() {
                 />
 
                 <Field>
-                  <Button className='cursor-pointer' type='submit'>
+                  <Button
+                    className='cursor-pointer border'
+                    type='submit'
+                    style={{
+                      backgroundColor: tokens.primary,
+                      borderColor: tokens.border,
+                      color: tokens.onPrimary,
+                    }}
+                  >
                     {params.get('register') === 'true' ? 'Cadastrar' : 'Entrar'}
                   </Button>
                   <Button className='cursor-pointer' variant='outline' type='button'>
@@ -419,7 +441,15 @@ export default function AuthPage() {
                 />
 
                 <Field>
-                  <Button className='h-12 cursor-pointer' type='submit'>
+                  <Button
+                    className='h-12 cursor-pointer border'
+                    type='submit'
+                    style={{
+                      backgroundColor: tokens.primary,
+                      borderColor: tokens.border,
+                      color: tokens.onPrimary,
+                    }}
+                  >
                     {params.get('register') === 'true' ? 'Cadastrar' : 'Entrar'}
                   </Button>
                   <Button className='h-12 cursor-pointer' variant='outline' type='button'>
