@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { AlertCircleIcon, CalendarIcon, CheckCircle2Icon, XIcon } from 'lucide-react'
+import { AlertCircleIcon, CalendarIcon, CheckCircle2Icon, CircleXIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Loader from '@/components/custom/loader'
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useHeader } from '@/hooks/use-header'
 import axios from '@/lib/axios'
 import dayjs from '@/lib/dayjs'
+import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
 import type { Appointment } from '@/types/consults'
 import { nameFormatter } from '@/utils/formatters'
@@ -77,25 +78,25 @@ export default function AdminDashboard() {
       title: 'Hoje',
       ammount: spinners.general ? '...' : stats.today,
       icon: <CalendarIcon className='h-5 w-5 text-blue-600 dark:text-white' />,
-      color: 'blue',
+      className: 'bg-blue-100 dark:bg-blue-600',
     },
     {
       title: 'Pendentes',
       ammount: spinners.general ? '...' : stats.pending,
       icon: <AlertCircleIcon className='h-5 w-5 text-yellow-600 dark:text-white' />,
-      color: 'yellow',
+      className: 'bg-yellow-100 dark:bg-yellow-600',
     },
     {
       title: 'Confirmados',
       ammount: spinners.general ? '...' : stats.confirmed,
       icon: <CheckCircle2Icon className='h-5 w-5 text-green-600 dark:text-white' />,
-      color: 'green',
+      className: 'bg-green-100 dark:bg-green-600',
     },
     {
       title: 'Cancelados',
       ammount: spinners.general ? '...' : stats.cancelled,
-      icon: <XIcon className='h-5 w-5 text-red-600 dark:text-white' />,
-      color: 'red',
+      icon: <CircleXIcon className='h-5 w-5 text-red-600 dark:text-white' />,
+      className: 'bg-red-100 dark:bg-red-600',
     },
   ]
 
@@ -116,9 +117,7 @@ export default function AdminDashboard() {
           {cards.map((card, index) => (
             <Card key={index}>
               <CardContent className='flex items-center gap-4'>
-                <div className={`p-3 rounded-full bg-${card.color}-100 dark:bg-${card.color}-600`}>
-                  {card.icon}
-                </div>
+                <div className={cn('p-3 rounded-full', card.className)}>{card.icon}</div>
                 <div>
                   <p className='text-2xl font-bold'>{card.ammount}</p>
                   <p className='text-sm text-muted-foreground'>{card.title}</p>
