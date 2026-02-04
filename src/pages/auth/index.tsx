@@ -83,6 +83,29 @@ export default function AuthPage() {
     setShowPassword(!showPassword)
   }
 
+  interface CustomizedMessage {
+    subtitle: string
+  }
+  const customizedMessages = (): CustomizedMessage => {
+    const registering = params.get('register') === 'true'
+
+    if (registering) {
+      return {
+        subtitle:
+          appMode === 'admin'
+            ? 'Crie sua conta para gerenciar sua barbearia'
+            : 'Cadastre-se para começar a agendar seus horários',
+      }
+    } else {
+      return {
+        subtitle:
+          appMode === 'admin'
+            ? 'Entre na sua conta para gerenciar sua barbearia'
+            : 'Entre na sua conta para começar a agendar',
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
@@ -273,7 +296,7 @@ export default function AuthPage() {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
             <h1 className='text-2xl font-bold'>Vamos Começar</h1>
-            <h2 className='text-primary/50'>Bem Vindo! Entre com sua conta.</h2>
+            <h2 className='text-primary/50'>{customizedMessages().subtitle}</h2>
           </div>
           <div className='h-full'>
             <Form {...form}>
