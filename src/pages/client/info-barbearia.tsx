@@ -46,34 +46,28 @@ export default function ClientInfoBarbershop() {
             <CardTitle className='text-lg'>{barbershop.company_name}</CardTitle>
           </CardHeader>
           <CardContent className='space-y-3'>
-            {barbershop.address && (
-              <div className='flex items-start gap-3'>
-                <MapPin className='h-5 w-5 text-muted-foreground shrink-0 mt-0.5' />
-                <span>{barbershop.address}</span>
-              </div>
-            )}
+            <div className='flex items-start gap-3'>
+              <MapPin className='h-5 w-5 text-muted-foreground shrink-0 mt-0.5' />
+              <span>{barbershop.address || 'Não informado'}</span>
+            </div>
 
-            {barbershop.phone && (
-              <a
-                href={`tel:${barbershop.phone}`}
-                className='flex items-center gap-3 hover:text-primary'
-              >
-                <Phone className='h-5 w-5 text-muted-foreground' />
-                <span>{barbershop.phone}</span>
-              </a>
-            )}
+            <a
+              href={`tel:${barbershop.phone}`}
+              className='flex items-center gap-3 hover:text-primary'
+            >
+              <Phone className='h-5 w-5 text-muted-foreground' />
+              <span>{barbershop.phone || 'Não informado'}</span>
+            </a>
 
-            {barbershop.instagram && (
-              <a
-                href={`https://instagram.com/${barbershop.instagram.replace('@', '')}`}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='flex items-center gap-3 hover:text-primary'
-              >
-                <Instagram className='h-5 w-5 text-muted-foreground' />
-                <span>{barbershop.instagram}</span>
-              </a>
-            )}
+            <a
+              href={`https://instagram.com/${barbershop.instagram?.replace('@', '')}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='flex items-center gap-3 hover:text-primary'
+            >
+              <Instagram className='h-5 w-5 text-muted-foreground' />
+              <span>{barbershop.instagram || 'Não informado'}</span>
+            </a>
           </CardContent>
         </Card>
 
