@@ -40,7 +40,7 @@ export default function ClientHome() {
           <span className='text-lg'>Meus Agendamentos</span>
         </Button>
         <Button
-          onClick={() => navigate('/informacoes')}
+          onClick={() => navigate('/info-barbearia')}
           className='h-12 cursor-pointer'
           variant='ghost'
         >

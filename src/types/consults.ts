@@ -17,6 +17,10 @@ export interface BarberShop {
   domain: string | null
   primary_color: string
   logo_url: string | null
+  address: string | null
+  phone: string | null
+  instagram: string | null
+  email: string | null
   created_at: string
   updated_at: string
   business_hours: BusinessHour[]

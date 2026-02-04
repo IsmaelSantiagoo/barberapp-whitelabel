@@ -18,7 +18,7 @@ import type { Appointment, Service } from '@/types/consults'
 
 type Step = 'service' | 'date' | 'time' | 'confirm'
 
-export default function ClientAgendar() {
+export default function ClientSchedule() {
   const navigate = useNavigate()
   const { barbershop, user } = useAuth()
   const { tokens } = useTheme()
