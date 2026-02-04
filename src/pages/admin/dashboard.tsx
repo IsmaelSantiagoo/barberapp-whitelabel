@@ -57,6 +57,19 @@ export default function AdminDashboard() {
     fetchStats()
   }, [])
 
+  const getStatusData = (status: string): { label: string; color: string } => {
+    switch (status) {
+      case '0':
+        return { label: 'Pendente', color: 'bg-yellow-500/20 text-yellow-400' }
+      case '1':
+        return { label: 'Confirmado', color: 'bg-green-500/20 text-green-400' }
+      case '2':
+        return { label: 'Cancelado', color: 'bg-red-500/20 text-red-400' }
+      default:
+        return { label: 'Desconhecido', color: 'default' }
+    }
+  }
+
   return (
     <div>
       {/* Content */}
@@ -135,8 +148,8 @@ export default function AdminDashboard() {
                         <p className='text-sm text-muted-foreground'>{apt.service?.name}</p>
                       </div>
                     </div>
-                    <Badge variant={apt.status === 'confirmed' ? 'default' : 'secondary'}>
-                      {apt.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+                    <Badge className={getStatusData(apt.status).color}>
+                      {getStatusData(apt.status).label}
                     </Badge>
                   </div>
                 ))}
