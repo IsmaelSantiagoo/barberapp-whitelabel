@@ -256,10 +256,10 @@ export default function ClientSchedule() {
                 <Card
                   key={service.id}
                   className={`cursor-pointer transition-colors ${
-                    selectedService?.id === service.id ? 'ring-2 ring-primary' : ''
+                    selectedService?.id === service.id ? 'border-3' : ''
                   }`}
                   style={{
-                    borderColor: selectedService?.id === service.id ? tokens.primary : undefined,
+                    borderColor: selectedService?.id === service.id ? tokens.border : undefined,
                   }}
                   onClick={() => {
                     setSelectedService(service)
@@ -268,10 +268,10 @@ export default function ClientSchedule() {
                 >
                   <CardContent className='flex items-center gap-4'>
                     <div
-                      className='w-12 h-12 rounded-full flex items-center justify-center'
-                      style={{ backgroundColor: tokens.onBackground }}
+                      className='w-12 h-12 rounded-full flex items-center justify-center border'
+                      style={{ backgroundColor: tokens.primary, borderColor: tokens.border }}
                     >
-                      <Scissors className='h-6 w-6' style={{ color: tokens.primary }} />
+                      <Scissors className='h-6 w-6' style={{ color: tokens.onPrimary }} />
                     </div>
                     <div className='flex-1'>
                       <h3 className='font-medium'>{service.name}</h3>
@@ -292,6 +292,8 @@ export default function ClientSchedule() {
           <>
             <style>{`
               [data-selected-single="true"] {
+                border: 1px solid !important;
+                border-color: ${tokens.border} !important;
                 background-color: ${tokens.primary} !important;
                 color: ${tokens.onPrimary} !important;
               }
@@ -338,8 +340,9 @@ export default function ClientSchedule() {
                   <Button
                     key={slot}
                     variant={selectedTime === slot ? 'default' : 'outline'}
-                    className='h-12'
+                    className='h-12 border'
                     style={{
+                      borderColor: selectedTime === slot ? tokens.border : undefined,
                       backgroundColor:
                         selectedTime === slot ? barbershop?.primary_color : undefined,
                       color: selectedTime === slot ? tokens.onPrimary : undefined,
@@ -392,9 +395,10 @@ export default function ClientSchedule() {
               </div>
 
               <Button
-                className='w-full h-12 mt-4'
+                className='w-full h-12 mt-4 border'
                 style={{
-                  background: tokens.primary,
+                  backgroundColor: tokens.primary,
+                  borderColor: tokens.border,
                   color: tokens.onPrimary,
                 }}
                 onClick={handleConfirm}

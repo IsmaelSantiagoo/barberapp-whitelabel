@@ -22,9 +22,10 @@ export default function ClientHome() {
 
         <Button
           onClick={() => navigate('/agendar')}
-          className='h-12 cursor-pointer text-lg'
+          className='h-12 cursor-pointer text-lg border'
           style={{
-            background: tokens.primary,
+            backgroundColor: tokens.primary,
+            borderColor: tokens.border,
             color: tokens.onPrimary,
           }}
         >
