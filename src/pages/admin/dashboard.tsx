@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
 
-import { AlertCircleIcon, CalendarIcon, CheckCircle2Icon, CircleXIcon } from 'lucide-react'
+import {
+  AlertCircleIcon,
+  CalendarIcon,
+  CheckCircle2Icon,
+  CircleXIcon,
+  RefreshCwIcon,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import Loader from '@/components/custom/loader'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useHeader } from '@/hooks/use-header'
 import axios from '@/lib/axios'
@@ -18,6 +25,7 @@ export default function AdminDashboard() {
   const { setPageTitle } = useHeader()
   const [spinners, setSpinners] = useState({
     general: false,
+    refresh: false,
   })
 
   useEffect(() => {
@@ -31,9 +39,10 @@ export default function AdminDashboard() {
     confirmed: 0,
     cancelled: 0,
   })
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
-  const fetchStats = async () => {
-    setSpinners((prev) => ({ ...prev, general: true }))
+  const fetchStats = async (isRefresh = false) => {
+    setSpinners((prev) => ({ ...prev, general: true, refresh: isRefresh }))
 
     try {
       const response = await axios.get<ApiResponse<Appointment[]>>('/dashboard/today_appointments')
@@ -52,7 +61,8 @@ export default function AdminDashboard() {
     } catch (error: any) {
       toast.error('Erro ao buscar estatísticas.', error)
     } finally {
-      setSpinners((prev) => ({ ...prev, general: false }))
+      setSpinners((prev) => ({ ...prev, general: false, refresh: false }))
+      setLastUpdate(new Date())
     }
   }
 
@@ -105,11 +115,26 @@ export default function AdminDashboard() {
       {/* Content */}
       <div className='space-y-6'>
         {/* Welcome */}
-        <div>
-          <h1 className='text-2xl font-bold'>Olá! 👋</h1>
-          <p className='text-muted-foreground'>
-            {dayjs(new Date()).format('dddd, D [de] MMMM [de] YYYY')}
-          </p>
+        <div className='flex justify-between items-end'>
+          <div>
+            <h1 className='text-2xl font-bold'>Olá! 👋</h1>
+            <p className='text-muted-foreground'>
+              {dayjs(new Date()).format('dddd, D [de] MMMM [de] YYYY')}
+            </p>
+          </div>
+
+          <div className='flex items-center gap-3'>
+            <span className='text-sm text-muted-foreground'>
+              Última atualização realizada às {dayjs(lastUpdate).format('HH:mm:ss')}
+            </span>
+            <Button size='icon' variant='outline' onClick={() => fetchStats(true)}>
+              <RefreshCwIcon
+                className={cn({
+                  'animate-spin': spinners.refresh,
+                })}
+              />
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
