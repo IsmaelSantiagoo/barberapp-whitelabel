@@ -1,4 +1,4 @@
-import { BellIcon, CircleUserRoundIcon, EllipsisVerticalIcon, LogOutIcon } from 'lucide-react'
+import { CircleUserRoundIcon, EllipsisVerticalIcon, LogOutIcon } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -77,10 +77,6 @@ export function SidebarUser() {
               <DropdownMenuItem>
                 <CircleUserRoundIcon />
                 Conta
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Notificações
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
