@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { AlertCircleIcon, CalendarIcon, CheckCircle2Icon } from 'lucide-react'
+import { AlertCircleIcon, CalendarIcon, CheckCircle2Icon, XIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Loader from '@/components/custom/loader'
@@ -28,6 +28,7 @@ export default function AdminDashboard() {
     today: 0,
     pending: 0,
     confirmed: 0,
+    cancelled: 0,
   })
 
   const fetchStats = async () => {
@@ -39,9 +40,10 @@ export default function AdminDashboard() {
       if (response.data.success) {
         setAppointments(response.data.data)
         setStats({
-          today: response.data.data.length,
+          today: response.data.data.filter((apt) => ['0', '1'].includes(apt.status)).length,
           pending: response.data.data.filter((appointment) => appointment.status === '0').length,
           confirmed: response.data.data.filter((appointment) => appointment.status === '1').length,
+          cancelled: response.data.data.filter((appointment) => appointment.status === '2').length,
         })
       } else {
         toast.error(response.data.message || 'Erro ao buscar agendamentos.')
@@ -70,6 +72,33 @@ export default function AdminDashboard() {
     }
   }
 
+  const cards = [
+    {
+      title: 'Hoje',
+      ammount: spinners.general ? '...' : stats.today,
+      icon: <CalendarIcon className='h-5 w-5 text-blue-600 dark:text-white' />,
+      color: 'blue',
+    },
+    {
+      title: 'Pendentes',
+      ammount: spinners.general ? '...' : stats.pending,
+      icon: <AlertCircleIcon className='h-5 w-5 text-yellow-600 dark:text-white' />,
+      color: 'yellow',
+    },
+    {
+      title: 'Confirmados',
+      ammount: spinners.general ? '...' : stats.confirmed,
+      icon: <CheckCircle2Icon className='h-5 w-5 text-green-600 dark:text-white' />,
+      color: 'green',
+    },
+    {
+      title: 'Cancelados',
+      ammount: spinners.general ? '...' : stats.cancelled,
+      icon: <XIcon className='h-5 w-5 text-red-600 dark:text-white' />,
+      color: 'red',
+    },
+  ]
+
   return (
     <div>
       {/* Content */}
@@ -83,42 +112,20 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats */}
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-          <Card>
-            <CardContent className='flex items-center gap-4'>
-              <div className='p-3 rounded-full bg-blue-100 dark:bg-blue-600'>
-                <CalendarIcon className='h-5 w-5 text-blue-600 dark:text-white' />
-              </div>
-              <div>
-                <p className='text-2xl font-bold'>{spinners.general ? '...' : stats.today}</p>
-                <p className='text-sm text-muted-foreground'>Hoje</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className='flex items-center gap-4'>
-              <div className='p-3 rounded-full bg-yellow-100 dark:bg-yellow-600'>
-                <AlertCircleIcon className='h-5 w-5 text-yellow-600 dark:text-white' />
-              </div>
-              <div>
-                <p className='text-2xl font-bold'>{spinners.general ? '...' : stats.pending}</p>
-                <p className='text-sm text-muted-foreground'>Pendentes</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className='flex items-center gap-4'>
-              <div className='p-3 rounded-full bg-green-100 dark:bg-green-600'>
-                <CheckCircle2Icon className='h-5 w-5 text-green-600 dark:text-white' />
-              </div>
-              <div>
-                <p className='text-2xl font-bold'>{spinners.general ? '...' : stats.confirmed}</p>
-                <p className='text-sm text-muted-foreground'>Confirmados</p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+          {cards.map((card, index) => (
+            <Card key={index}>
+              <CardContent className='flex items-center gap-4'>
+                <div className={`p-3 rounded-full bg-${card.color}-100 dark:bg-${card.color}-600`}>
+                  {card.icon}
+                </div>
+                <div>
+                  <p className='text-2xl font-bold'>{card.ammount}</p>
+                  <p className='text-sm text-muted-foreground'>{card.title}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Today's Appointments */}
@@ -130,7 +137,7 @@ export default function AdminDashboard() {
           <CardContent>
             {spinners.general ? (
               <Loader showMessage={true} message='Carregando agendamentos...' />
-            ) : stats.today === 0 ? (
+            ) : appointments.length === 0 ? (
               <p className='text-muted-foreground'>Nenhum agendamento para hoje</p>
             ) : (
               <div className='space-y-3'>
