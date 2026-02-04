@@ -18,7 +18,7 @@ const ThemeProvider = ({
   storageKey = 'theme',
 }: ThemeProviderProps) => {
   const { barbershop } = useAuth()
-  const barbershopPrimaryColor = barbershop?.primary_color || '#3B82F6'
+  const barbershopPrimaryColor = barbershop?.primary_color || '#ffffff'
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
