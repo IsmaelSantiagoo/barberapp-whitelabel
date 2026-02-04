@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const appMode = import.meta.env.VITE_APP_MODE
+
 export const schema = (registering: boolean) =>
   z
     .object({
@@ -23,7 +25,8 @@ export const schema = (registering: boolean) =>
     )
     .refine(
       (data) => {
-        if (registering) {
+        // Apenas valida company_name se for appMode admin
+        if (registering && appMode === 'admin') {
           return !!data.company_name && data.company_name.trim().length > 0
         }
         return true
@@ -35,7 +38,8 @@ export const schema = (registering: boolean) =>
     )
     .refine(
       (data) => {
-        if (registering) {
+        // Apenas valida primary_color se for appMode admin
+        if (registering && appMode === 'admin') {
           return !!data.primary_color && data.primary_color.trim().length > 0
         }
         return true
