@@ -153,7 +153,9 @@ export function useAuth() {
         const { message } = response.data
         if (!response.data.success) throw new Error(message || 'Erro ao registrar')
 
-        return { success: true, message: message }
+        // Após o cadastro, faz login automático
+        const loginResult = await signIn(signUpData.email, signUpData.password)
+        return loginResult
       } else {
         const response = await axios.post<ApiResponse>(`${API_URL}/auth/register`, {
           name: signUpData.owner_name,
@@ -165,7 +167,9 @@ export function useAuth() {
         const { message } = response.data
         if (!response.data.success) throw new Error(message || 'Erro ao registrar')
 
-        return { success: true, message: message }
+        // Após o cadastro, faz login automático
+        const loginResult = await signIn(signUpData.email, signUpData.password)
+        return loginResult
       }
     } catch (error: any) {
       return { success: false, message: error.message }
