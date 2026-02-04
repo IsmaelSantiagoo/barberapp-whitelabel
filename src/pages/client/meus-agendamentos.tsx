@@ -122,10 +122,12 @@ export default function MyAppointments() {
               <h2 className='text-lg font-medium mb-2'>Nenhum agendamento</h2>
               <p className='text-muted-foreground mb-6'>Você ainda não tem agendamentos futuros</p>
               <Button
+                className='border'
                 onClick={() => navigate(`/agendar`)}
                 style={{
                   backgroundColor: tokens.primary,
                   color: tokens.onPrimary,
+                  borderColor: tokens.border,
                 }}
               >
                 Agendar Horário
