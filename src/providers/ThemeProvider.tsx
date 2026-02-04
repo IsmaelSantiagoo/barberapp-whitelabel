@@ -34,6 +34,13 @@ const ThemeProvider = ({
     root.classList.add(resolvedTheme)
   }, [resolvedTheme])
 
+  // Aplica os tokens de cor como CSS variables
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.setProperty('--primary', barbershopPrimaryColor)
+    root.style.setProperty('--primary-foreground', getReadableTextColor(barbershopPrimaryColor))
+  }, [barbershopPrimaryColor])
+
   const tokens = useMemo(() => {
     const onPrimary = getReadableTextColor(barbershopPrimaryColor)
 
