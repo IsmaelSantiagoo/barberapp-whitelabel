@@ -46,12 +46,10 @@ export default function ClientSchedule() {
     }
   }, [selectedDate])
 
-  // Calculate available time slots
+  // Recalculate available slots when appointments, date, or service changes
   useEffect(() => {
-    if (selectedDate && selectedService && barbershop) {
-      calculateAvailableSlots()
-    }
-  }, [selectedDate, selectedService, barbershop])
+    calculateAvailableSlots()
+  }, [appointments, selectedDate, selectedService])
 
   /******************** FETCHERS ********************/
   const fetchAppointments = async () => {
@@ -129,10 +127,15 @@ export default function ClientSchedule() {
         }
       }
 
-      // Check if slot conflicts with existing appointments
+      // Check if slot conflicts with existing appointments on this specific date
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd')
       const isOccupied = appointments.some((apt) => {
         const aptTime = apt.time.slice(0, 5)
-        return aptTime === slotString
+        const aptDate = apt.date
+        // Compare both date AND time, and only exclude confirmed/pending appointments
+        return (
+          aptDate === selectedDateStr && aptTime === slotString && ['0', '1'].includes(apt.status)
+        )
       })
 
       if (!isOccupied) {
