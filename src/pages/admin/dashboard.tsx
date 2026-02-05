@@ -13,6 +13,8 @@ import Loader from '@/components/custom/loader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '@/hooks/use-auth'
+import useEcho from '@/hooks/use-echo'
 import { useHeader } from '@/hooks/use-header'
 import axios from '@/lib/axios'
 import dayjs from '@/lib/dayjs'
@@ -22,15 +24,30 @@ import type { Appointment } from '@/types/consults'
 import { nameFormatter } from '@/utils/formatters'
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
   const { setPageTitle } = useHeader()
   const [spinners, setSpinners] = useState({
     general: false,
     refresh: false,
   })
 
+  const { messages } = useEcho({
+    channelName: user ? `barber.${user.id}.notifications` : '',
+    mode: 'event',
+    eventName: 'appointment.created',
+  })
+
   useEffect(() => {
     setPageTitle('Dashboard')
   }, [])
+
+  /**
+   * consultar dados quando receber notificação
+   */
+  useEffect(() => {
+    // consultar dados
+    fetchStats()
+  }, [messages])
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [stats, setStats] = useState({
@@ -65,10 +82,6 @@ export default function AdminDashboard() {
       setLastUpdate(new Date())
     }
   }
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
 
   const getStatusData = (status: string): { label: string; color: string } => {
     switch (status) {
