@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 
 import { SaveIcon } from 'lucide-react'
 import { toast } from 'sonner'
@@ -188,13 +188,6 @@ export default function AdminBusinessHours() {
                   {!hour.is_open && <span className='text-sm text-muted-foreground'>Fechado</span>}
                   <Switch
                     checked={hour.is_open}
-                    style={
-                      {
-                        '--switch-checked-bg': tokens.primary,
-                        '--switch-unchecked-bg': tokens.disabled,
-                        '--switch-thumb-bg': tokens.onPrimary,
-                      } as CSSProperties
-                    }
                     onCheckedChange={(checked) => updateDay(index, 'is_open', checked)}
                   />
                 </div>

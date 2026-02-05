@@ -30,10 +30,10 @@ export interface BarberShop {
 export interface Service {
   id: number
   barbershop_id: string
-  category_id: number
   name: string
   price: string
   duration_minutes: number
+  active: number
   created_at: string
   updated_at: string
 }

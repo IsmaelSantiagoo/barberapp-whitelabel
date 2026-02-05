@@ -341,7 +341,7 @@ export default function ClientSchedule() {
                 {availableSlots.map((slot) => (
                   <Button
                     key={slot}
-                    variant={selectedTime === slot ? 'default' : 'outline'}
+                    variant={selectedTime === slot ? 'solid' : 'outline'}
                     className='h-12 border'
                     style={{
                       borderColor: selectedTime === slot ? tokens.border : undefined,

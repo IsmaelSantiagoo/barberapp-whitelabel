@@ -30,6 +30,11 @@ const data = {
       icon: LayoutDashboardIcon,
     },
     {
+      title: 'Serviços',
+      url: '/admin/services',
+      icon: ScissorsIcon,
+    },
+    {
       title: 'Horários',
       url: '/admin/business-hours',
       icon: ClockIcon,

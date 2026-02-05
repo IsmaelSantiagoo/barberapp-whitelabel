@@ -190,7 +190,7 @@ export default function MyAppointments() {
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
             <AlertDialogAction
-              variant='destructive'
+              color='destructive'
               onClick={() => cancelingId && handleCancel(cancelingId)}
               disabled={spinners.canceling}
             >
