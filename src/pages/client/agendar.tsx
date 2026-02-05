@@ -173,7 +173,6 @@ export default function ClientSchedule() {
       })
 
       if (response.data.success) {
-        setAppointments(response.data.data)
         toast.success('Agendamento realizado com sucesso!')
         navigate('/meus-agendamentos')
       } else {

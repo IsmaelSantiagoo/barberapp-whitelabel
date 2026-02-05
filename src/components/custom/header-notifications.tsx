@@ -1,9 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { useEchoNotification } from '@laravel/echo-react'
-import { Howl } from 'howler'
 import { BellIcon } from 'lucide-react'
-import { Link } from 'react-router'
 
 // Importar o arquivo de áudio diretamente
 import notificationAudio from '@/assets/notification.mp3'
@@ -11,122 +8,94 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip } from '@/components/ui/tooltip'
 import { useAuth } from '@/hooks/use-auth'
-// Garante que o configureEcho é chamado
+import useEcho from '@/hooks/use-echo'
 import axios from '@/lib/axios'
 import dayjs from '@/lib/dayjs'
-import '@/lib/echo'
 import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
+import { type Notification } from '@/types/consults'
 
-type NotificationType = 'info' | 'warning' | 'error' | 'success'
-
-export interface Notification {
-  id: string
-  titulo?: string
-  mensagem: string
-  tipo: NotificationType
-  link?: string
-  data_envio: string
-  lida: boolean
-}
-
-type NotificationPayload = {
-  id: string
-  titulo?: string
-  mensagem: string
-  tipo: NotificationType
-  link?: string
-  data_envio: string
-  lida: boolean
-}
-
-export default function Notifications() {
-  const { user } = useAuth()
-
+const HeaderNotifications = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const notificationSound = useRef<Howl | null>(null)
+  const notificationSound = useRef<HTMLAudioElement | null>(null)
   const lastPlayTimeRef = useRef<number>(0)
+
+  // dados do usuário
+  const { user } = useAuth()
 
   // Prevenir múltiplas reproduções em um curto período de tempo
   const PLAY_DEBOUNCE_MS = 500
 
-  const [notifications, setNotifications] = useState<Notification[]>([])
-
-  // Callback para processar notificações recebidas via WebSocket
-  const handleNotification = useCallback((data: NotificationPayload) => {
-    const newNotification: Notification = {
-      id: data.id,
-      titulo: data.titulo,
-      mensagem: data.mensagem,
-      tipo: (data.tipo as NotificationType) || 'info',
-      link: data.link,
-      data_envio: data.data_envio || new Date().toISOString(),
-      lida: data.lida ?? false,
-    }
-
-    setNotifications((prev) => [...prev, newNotification])
-
-    // Reproduzir som com debounce para evitar pool exhausted
-    const now = Date.now()
-    if (notificationSound.current && now - lastPlayTimeRef.current > PLAY_DEBOUNCE_MS) {
-      try {
-        notificationSound.current.play()
-        lastPlayTimeRef.current = now
-      } catch (error) {
-        console.error('Erro ao tocar notificação:', error)
-      }
-    }
-  }, [])
-
-  useEchoNotification(`barber.${user?.id}.notifications`, handleNotification)
-
-  // Inicializar o som apenas uma vez
+  // Inicializar o som apenas uma vez usando HTMLAudioElement
   useEffect(() => {
-    notificationSound.current = new Howl({
-      src: [notificationAudio],
-      volume: 0.3,
-      preload: true,
-      // Usar Web Audio API ao invés de HTML5 para evitar pool exhausted
-      html5: false,
-      onloaderror: (_, error) => {
-        console.error('Erro ao carregar áudio de notificação:', error)
-      },
-      onplayerror: (_, error) => {
-        console.error('Erro ao reproduzir áudio de notificação:', error)
-        // Tentar desbloquear o áudio (pode ser necessário em alguns navegadores)
-        notificationSound.current?.once('unlock', () => {
-          notificationSound.current?.play()
-        })
-      },
-    })
+    const audio = new Audio(notificationAudio)
+    audio.preload = 'auto'
+    audio.volume = 0.7
+    notificationSound.current = audio
+
+    // Desbloquear áudio na primeira interação global do usuário
+    const unlockAudio = () => {
+      if (notificationSound.current) {
+        notificationSound.current.volume = 0
+        notificationSound.current.currentTime = 0
+        notificationSound.current
+          .play()
+          .then(() => {
+            // Pausa imediatamente após o play silencioso
+            notificationSound.current?.pause()
+            notificationSound.current!.currentTime = 0
+            notificationSound.current!.volume = 0.7
+          })
+          .catch(() => {
+            // Mesmo se falhar, restaura o volume
+            if (notificationSound.current) notificationSound.current.volume = 0.7
+          })
+      }
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
+    }
+    window.addEventListener('pointerdown', unlockAudio)
+    window.addEventListener('keydown', unlockAudio)
 
     return () => {
-      notificationSound.current?.unload()
+      audio.pause()
+      audio.src = ''
+      notificationSound.current = null
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
     }
   }, [])
 
-  const [open, setOpen] = useState(false)
+  // Só inicializa o Echo quando o user estiver carregado
+  const { messages, clearMessages } = useEcho({
+    channelName: user ? `barber.${user.id}.notifications` : '',
+    mode: 'event',
+    eventName: 'appointment.created',
+  })
 
-  const unreadCount = notifications.filter((n) => !n.lida).length
+  const [open, setOpen] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   const markAsRead = (id: string) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, lida: true } : n)))
+    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)))
 
-    axios.post('/notifications/read', { id: [id] })
+    axios.post('notifications/read', { id: [id] })
   }
 
   const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, lida: true })))
+    setNotifications(notifications.map((n) => ({ ...n, read: true })))
 
-    axios.post('/notifications/read', { id: notifications.map((n) => n.id) })
+    axios.post('notifications/read', { id: notifications.map((n) => n.id) })
   }
 
   const fetchOldNotifications = async () => {
     try {
-      const response = await axios.get<ApiResponse<Notification[]>>('/notifications')
+      const res = await axios.get<ApiResponse<Notification[]>>('notifications')
 
-      if (response.data.success) {
-        const oldNotifications = response.data.data!
+      if (res.data.success) {
+        const oldNotifications = res.data.data!
 
         setNotifications((prev) => [...oldNotifications, ...prev])
       }
@@ -139,19 +108,57 @@ export default function Notifications() {
     fetchOldNotifications()
   }, [])
 
+  // Scroll automático ao abrir o popover
   useEffect(() => {
     if (open) {
       const timeout = setTimeout(() => {
         const container = scrollRef.current
-
         if (container) {
           container.scrollTop = container.scrollHeight
         }
       }, 50)
-
       return () => clearTimeout(timeout)
     }
   }, [open])
+
+  useEffect(() => {
+    if (messages.length > 0 && notificationSound.current) {
+      console.log('[HeaderNotifications] Mensagens recebidas:', messages)
+
+      setNotifications((prev) => {
+        return [
+          ...prev,
+          ...messages.map((message) => {
+            console.log('[HeaderNotifications] Processando mensagem:', message)
+            return {
+              id: message.id,
+              title: message.title,
+              message: message.message,
+              type: message.type,
+              link: message.link,
+              sent_at: message.sent_at,
+              read: message.read,
+            }
+          }),
+        ]
+      })
+
+      // Reproduzir som com debounce para evitar pool exhausted
+      const now = Date.now()
+      if (notificationSound.current && now - lastPlayTimeRef.current > PLAY_DEBOUNCE_MS) {
+        try {
+          // Reinicia o áudio se já estiver tocando
+          notificationSound.current.currentTime = 0
+          notificationSound.current.play()
+          lastPlayTimeRef.current = now
+        } catch (error) {
+          console.error('Erro ao tocar notificação:', error)
+        }
+      }
+
+      clearMessages()
+    }
+  }, [messages, clearMessages])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -169,7 +176,7 @@ export default function Notifications() {
         </Tooltip>
       </PopoverTrigger>
 
-      <PopoverContent className='w-lg p-0 select-none mt-3 -ml-13' align='start'>
+      <PopoverContent className='w-lg p-0 select-none' align='start'>
         {notifications.length > 0 ? (
           <>
             <div className='flex items-center justify-between border-b px-4 py-2'>
@@ -186,68 +193,70 @@ export default function Notifications() {
             </div>
 
             <div className='h-87.5 overflow-auto' ref={scrollRef}>
-              {notifications.map((notification) => {
-                const Component = notification.link ? Link : 'div'
-
-                return (
-                  <Component
-                    key={notification.id}
-                    to={notification.link!}
-                    onClick={() => {
-                      if (notification.link) setOpen(false)
-                    }}
-                  >
-                    <div
-                      className={cn({
-                        'border-l-4 border-blue-500': !notification.lida,
-                        'cursor-pointer': notification.link,
-                      })}
+              {Array.from(new Map(notifications.map((n) => [n.id, n])).values()).map(
+                (notification) => {
+                  const Component = notification.link ? 'a' : 'div'
+                  return (
+                    <Component
+                      key={notification.id}
+                      href={notification.link || '#'}
+                      target='_blank'
+                      onClick={() => {
+                        if (notification.link) setOpen(false)
+                      }}
                     >
                       <div
-                        className={cn(
-                          'flex gap-3 border-b p-4 transition-colors hover:bg-muted/50',
-                          notification.lida ? 'opacity-70' : ''
-                        )}
-                        onClick={() => markAsRead(notification.id)}
+                        className={cn({
+                          'border-l-4 border-blue-500': !notification.read,
+                          'cursor-pointer': notification.link,
+                        })}
                       >
-                        <div className='shrink-0 pt-1'>
-                          <span
-                            className={cn('block h-3 w-3 rounded-full', {
-                              'bg-blue-500': notification.tipo === 'info',
-                              'bg-amber-500': notification.tipo === 'warning',
-                              'bg-red-500': notification.tipo === 'error',
-                              'bg-green-500': notification.tipo === 'success',
-                            })}
-                          />
-                        </div>
-                        <div className='flex-1'>
-                          <div className='flex items-start justify-between gap-2'>
-                            <p
-                              className={cn(
-                                'text-sm font-medium',
-                                !notification.lida && 'font-semibold'
-                              )}
-                            >
-                              {notification.titulo || 'Notificação'}
-                            </p>
-
+                        <div
+                          className={cn(
+                            'flex gap-3 border-b p-4 transition-colors hover:bg-muted/50',
+                            notification.read ? 'opacity-70' : ''
+                          )}
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <div className='shrink-0 pt-1'>
                             <span
-                              className='text-[10px] text-muted-foreground whitespace-nowrap'
-                              title={dayjs(notification.data_envio).format('DD/MM/YYYY HH:mm:ss')}
-                            >
-                              {dayjs(notification.data_envio).fromNow()}
-                            </span>
+                              className={cn('block h-3 w-3 rounded-full', {
+                                'bg-blue-500': notification.type === 'info',
+                                'bg-amber-500': notification.type === 'warning',
+                                'bg-red-500': notification.type === 'error',
+                                'bg-green-500': notification.type === 'success',
+                              })}
+                            />
                           </div>
+                          <div className='flex-1'>
+                            <div className='flex items-start justify-between gap-2'>
+                              <p
+                                className={cn(
+                                  'text-sm font-medium',
+                                  !notification.read && 'font-semibold'
+                                )}
+                              >
+                                {notification.title || 'Notificação'}
+                              </p>
 
-                          <p className='mt-1 text-xs text-muted-foreground'>
-                            {notification.mensagem}
-                          </p>
+                              <span
+                                className='text-[10px] text-muted-foreground whitespace-nowrap'
+                                title={dayjs(notification.sent_at).format('DD/MM/YYYY HH:mm:ss')}
+                              >
+                                {dayjs(notification.sent_at).fromNow()}
+                              </span>
+                            </div>
+
+                            <p className='mt-1 text-xs text-muted-foreground'>
+                              {notification.message}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Component>
-                )
-              })}
+                    </Component>
+                  )
+                }
+              )}
             </div>
           </>
         ) : (
@@ -259,3 +268,5 @@ export default function Notifications() {
     </Popover>
   )
 }
+
+export default HeaderNotifications

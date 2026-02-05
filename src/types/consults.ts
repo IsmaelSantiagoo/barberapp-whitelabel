@@ -1,3 +1,5 @@
+import type { NotificationType } from '@/hooks/use-echo'
+
 export interface User {
   id: number
   name: string
@@ -71,4 +73,14 @@ export interface BusinessHour {
   is_open: boolean
   created_at: string | null
   updated_at: string | null
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: NotificationType
+  link: string | null
+  sent_at: string
+  read: boolean
 }
