@@ -163,8 +163,8 @@ export default function ServiceForm({ children, service, onClose }: ServiceFormP
                     <FormLabel required>Status</FormLabel>
                     <FormControl>
                       <div className='flex justify-between border border-input rounded-md px-2 p-1.25 bg-input/40'>
-                        <span>{field.value === 1 ? 'Ativo' : 'Inativo'}</span>
-                        <Switch checked={field.value === 1} onCheckedChange={field.onChange} />
+                        <span>{field.value ? 'Ativo' : 'Inativo'}</span>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </div>
                     </FormControl>
                     <FormMessage />

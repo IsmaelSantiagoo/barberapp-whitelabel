@@ -9,7 +9,7 @@ const schema = z.object({
   duration_minutes: z
     .union([z.literal(''), z.number()])
     .refine((val) => val !== '' && val >= 1, { message: 'A duração deve ser maior que zero.' }),
-  active: z.number(),
+  active: z.boolean(),
 })
 
 export type Schema = z.infer<typeof schema>
@@ -19,7 +19,7 @@ export const defaultValues = (data?: Service): Schema => ({
   name: data?.name || '',
   price: Number(data?.price) || 0,
   duration_minutes: data?.duration_minutes ?? '',
-  active: data?.active ?? 1,
+  active: data?.active ?? true,
 })
 
 export default schema

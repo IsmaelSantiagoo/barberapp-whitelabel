@@ -33,7 +33,7 @@ export interface Service {
   name: string
   price: string
   duration_minutes: number
-  active: number
+  active: boolean
   created_at: string
   updated_at: string
 }
