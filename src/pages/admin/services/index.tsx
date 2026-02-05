@@ -56,10 +56,8 @@ export default function AdminServices() {
           <p className='text-muted-foreground'>{services.length} serviço(s) cadastrado(s)</p>
         </div>
         <ServiceForm
-          onClose={(saved) => {
-            if (saved) {
-              fetchServices()
-            }
+          onClose={() => {
+            fetchServices()
           }}
         />
       </div>
@@ -75,10 +73,8 @@ export default function AdminServices() {
             <h3 className='font-semibold mb-2'>Nenhum serviço cadastrado</h3>
             <p className='text-muted-foreground mb-4'>Comece adicionando seu primeiro serviço.</p>
             <ServiceForm
-              onClose={(saved) => {
-                if (saved) {
-                  fetchServices()
-                }
+              onClose={() => {
+                fetchServices()
               }}
             />
           </CardContent>

@@ -74,7 +74,9 @@ export default function ClientSchedule() {
     setSpinners((prev) => ({ ...prev, services: true }))
 
     try {
-      const response = await axios.get<ApiResponse<Service[]>>('/services')
+      const response = await axios.get<ApiResponse<Service[]>>('/services', {
+        params: { active: true },
+      })
 
       if (response.data.success) {
         setServices(response.data.data)
