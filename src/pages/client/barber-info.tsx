@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
+import { phoneFormatter } from '@/utils/formatters'
 
 const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
@@ -55,7 +56,7 @@ export default function ClientInfoBarbershop() {
               className='flex items-center gap-3 hover:text-primary'
             >
               <Phone className='h-5 w-5 text-muted-foreground' />
-              <span>{barbershop.phone || 'Não informado'}</span>
+              <span>{barbershop.phone ? phoneFormatter(barbershop.phone) : 'Não informado'}</span>
             </a>
 
             <a

@@ -1,6 +1,6 @@
+import { Skeleton } from '../ui/skeleton'
 import { CircleUserRoundIcon, EllipsisVerticalIcon, LogOutIcon } from 'lucide-react'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +18,11 @@ import {
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
 
+import { CustomAvatar } from './avatar'
+
 export function SidebarUser() {
   const { isMobile } = useSidebar()
-  const { user, signOut } = useAuth()
+  const { user, signOut, loading } = useAuth()
 
   return (
     <SidebarMenu>
@@ -31,19 +33,22 @@ export function SidebarUser() {
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              <Avatar className='h-8 w-8 rounded-lg grayscale'>
-                <AvatarImage src={user?.profile_photo ?? undefined} alt={user?.name} />
-                <AvatarFallback className='rounded-lg'>
-                  {user?.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <CustomAvatar
+                src={user?.profile_photo ?? undefined}
+                alt={user?.name || undefined}
+                className='h-10 w-10 grayscale'
+              />
               <div className='grid flex-1 text-left text-sm leading-tight'>
-                <span className='truncate font-medium'>{user?.name.toUpperCase()}</span>
-                <span className='text-muted-foreground truncate text-xs'>{user?.email}</span>
+                {loading ? (
+                  <Skeleton className='p-2 mb-1 w-22' />
+                ) : (
+                  <span className='truncate font-medium'>{user?.name.toUpperCase()}</span>
+                )}
+                {loading ? (
+                  <Skeleton className='p-1' />
+                ) : (
+                  <span className='text-muted-foreground truncate text-xs'>{user?.email}</span>
+                )}
               </div>
               <EllipsisVerticalIcon className='ml-auto size-4' />
             </SidebarMenuButton>
@@ -56,19 +61,22 @@ export function SidebarUser() {
           >
             <DropdownMenuLabel className='p-0 font-normal'>
               <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-                <Avatar className='h-8 w-8 rounded-lg'>
-                  <AvatarImage src={user?.profile_photo ?? undefined} alt={user?.name} />
-                  <AvatarFallback className='rounded-lg'>
-                    {user?.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <CustomAvatar
+                  src={user?.profile_photo ?? undefined}
+                  alt={user?.name || undefined}
+                  className='h-10 w-10 grayscale'
+                />
                 <div className='grid flex-1 text-left text-sm leading-tight'>
-                  <span className='truncate font-medium'>{user?.name.toUpperCase()}</span>
-                  <span className='text-muted-foreground truncate text-xs'>{user?.email}</span>
+                  {loading ? (
+                    <Skeleton className='p-2 mb-1 w-22' />
+                  ) : (
+                    <span className='truncate font-medium'>{user?.name.toUpperCase()}</span>
+                  )}
+                  {loading ? (
+                    <Skeleton className='p-1' />
+                  ) : (
+                    <span className='text-muted-foreground truncate text-xs'>{user?.email}</span>
+                  )}
                 </div>
               </div>
             </DropdownMenuLabel>

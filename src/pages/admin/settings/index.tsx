@@ -1,0 +1,343 @@
+import { useEffect, useState } from 'react'
+
+import { zodResolver } from '@hookform/resolvers/zod'
+import { LinkIcon, SaveIcon, ScissorsIcon } from 'lucide-react'
+import { useForm, useWatch } from 'react-hook-form'
+import { toast } from 'sonner'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { useAuth } from '@/hooks/use-auth'
+import axios from '@/lib/axios'
+import type { ApiResponse } from '@/types/api-response'
+
+import schema, { defaultValues, type Schema } from './schemas'
+import PageSkeleton from './skeletons'
+
+export default function AdminSettings() {
+  // ==================== Dados Iniciais ====================
+  const { barbershop } = useAuth()
+
+  // ==================== States ====================
+  const [spinners, setSpinners] = useState({
+    page: true,
+    submitting: false,
+  })
+  const [logoError, setLogoError] = useState(false)
+  // ==================== Utils ====================
+  const formatPhoneDisplay = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, '')
+    if (cleaned.length <= 2) return cleaned
+    if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`
+  }
+
+  const unformatPhone = (phone: string) => {
+    return phone.replace(/\D/g, '')
+  }
+  // ==================== Formulário ====================
+  const form = useForm<Schema>({
+    resolver: zodResolver(schema),
+    defaultValues: defaultValues(barbershop),
+    mode: 'onSubmit',
+  })
+
+  const previewLogoUrl = useWatch({ control: form.control, name: 'logo_url' })
+  const previewCompanyName = useWatch({ control: form.control, name: 'company_name' })
+  const previewPrimaryColor = useWatch({ control: form.control, name: 'primary_color' })
+
+  // Reset logo error when URL changes
+  useEffect(() => {
+    setLogoError(false)
+  }, [previewLogoUrl])
+
+  // ==================== Submit ====================
+  const onSubmit = async (values: Schema) => {
+    // comparação manual para detectar mudanças
+    const hasChanges =
+      values.company_name !== (barbershop?.company_name || '') ||
+      values.phone !== (barbershop?.phone || '') ||
+      values.address !== (barbershop?.address || '') ||
+      values.instagram !== (barbershop?.instagram || '') ||
+      values.logo_url !== (barbershop?.logo_url || '') ||
+      values.primary_color !== (barbershop?.primary_color || '#000000')
+
+    // validando se há alterações no formulário
+    if (!hasChanges) {
+      toast.info('Nenhuma alteração para salvar.')
+      return
+    }
+
+    // validando se a imagem do logo carregou corretamente
+    if (previewLogoUrl && logoError) {
+      toast.error('Erro ao carregar o logo. Verifique a URL.')
+      return
+    }
+
+    setSpinners((prev) => ({ ...prev, submitting: true }))
+
+    try {
+      const response = await axios.put<ApiResponse>(`/barber-shops/${barbershop?.id}`, values)
+      const { data } = response
+
+      if (data.success) {
+        toast.success(data.message || 'Configurações salvas com sucesso.')
+
+        // atualiza a tela se o nome, cor ou logo tiverem sido alterados
+        if (
+          values.company_name !== barbershop?.company_name ||
+          values.primary_color !== barbershop?.primary_color ||
+          values.logo_url !== barbershop?.logo_url
+        ) {
+          window.location.reload()
+        }
+      } else {
+        toast.error(data.message || 'Erro ao salvar configurações.')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao salvar configurações.')
+    } finally {
+      setSpinners((prev) => ({ ...prev, submitting: false }))
+    }
+  }
+
+  // atualizar formulário quando os dados da barbearia mudarem
+  useEffect(() => {
+    form.reset(defaultValues(barbershop))
+
+    if (barbershop) setSpinners((prev) => ({ ...prev, page: false }))
+  }, [barbershop])
+
+  if (spinners.page) {
+    return <PageSkeleton />
+  }
+
+  return (
+    <div className='min-w-2xl mx-auto space-y-6'>
+      <div className='space-y-6'>
+        <div className='flex items-center justify-between'>
+          <div>
+            <h1 className='text-2xl font-bold hidden lg:block'>Configurações</h1>
+            <p className='text-muted-foreground'>Personalize sua barbearia</p>
+          </div>
+          <Button onClick={form.handleSubmit(onSubmit)} disabled={spinners.submitting}>
+            <SaveIcon className='mr-2 h-4 w-4' />
+            Salvar
+          </Button>
+        </div>
+
+        <p className='text-yellow-500'>
+          *As alterações podem levar alguns minutos para serem refletidas no aplicativo.
+        </p>
+      </div>
+
+      <Form {...form}>
+        <form className='space-y-6'>
+          {/* App Link */}
+          <Card>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2'>
+                <LinkIcon className='h-5 w-5' />
+                Link do App
+              </CardTitle>
+              <CardDescription>Compartilhe este link com seus clientes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='flex gap-2'>
+                <Input readOnly className='font-mono text-sm' />
+                <Button variant='outline'>Copiar</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Basic Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações Básicas</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <FormField
+                control={form.control}
+                name='company_name'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required>Nome da Barbearia</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Nome da Barbearia' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='phone'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='(00) 00000-0000'
+                        maxLength={15}
+                        value={formatPhoneDisplay(field.value || '')}
+                        onChange={(e) => {
+                          const unformatted = unformatPhone(e.target.value)
+                          if (unformatted.length <= 11) {
+                            field.onChange(unformatted)
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='address'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Rua, número, bairro, cidade' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='instagram'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instagram</FormLabel>
+                    <FormControl>
+                      <Input placeholder='@suabarbearia' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Whitelabel */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Personalização Visual</CardTitle>
+              <CardDescription>Customize a aparência do seu app</CardDescription>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <FormField
+                control={form.control}
+                name='logo_url'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL do Logo</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='https://exemplo.com/logo.png'
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    {previewLogoUrl && logoError && (
+                      <p className='text-xs text-destructive mt-1'>
+                        Erro ao carregar imagem. Verifique a URL.
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='primary_color'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required>Cor Principal</FormLabel>
+                    <FormControl>
+                      <div className='flex gap-3'>
+                        <Input
+                          type='color'
+                          value={field.value || '#000000'}
+                          onChange={(event) => field.onChange(event.target.value)}
+                          className='w-14'
+                        />
+                        <Input
+                          placeholder='#000000'
+                          maxLength={7}
+                          value={field.value || '#'}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Backspace' && (field.value || '#') === '#') {
+                              event.preventDefault()
+                            }
+                          }}
+                          onChange={(event) => {
+                            const rawValue = event.target.value
+                            const nextValue = rawValue.startsWith('#')
+                              ? rawValue
+                              : `#${rawValue.slice(1)}`
+                            field.onChange(nextValue)
+                          }}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Preview */}
+              <div className='mt-4 p-4 rounded-lg border'>
+                <p className='text-sm text-muted-foreground mb-3'>Prévia</p>
+                <div className='flex items-center gap-3'>
+                  <div className='w-12 h-12 rounded-full flex items-center justify-center bg-muted'>
+                    {previewLogoUrl && !logoError ? (
+                      <img
+                        src={previewLogoUrl}
+                        alt='Logo'
+                        className='w-12 h-12 rounded-full object-cover'
+                        onError={() => setLogoError(true)}
+                        onLoad={() => setLogoError(false)}
+                      />
+                    ) : (
+                      <ScissorsIcon className='h-6 w-6 text-muted-foreground' />
+                    )}
+                  </div>
+                  <span className='font-semibold'>{previewCompanyName}</span>
+                </div>
+                <Button
+                  type='button'
+                  className='mt-3 w-full'
+                  style={{
+                    backgroundColor: previewPrimaryColor,
+                    borderColor: previewPrimaryColor,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Exemplo de Botão
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+    </div>
+  )
+}

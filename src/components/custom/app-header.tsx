@@ -1,12 +1,14 @@
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { useAuth } from '@/hooks/use-auth'
 import { useHeader } from '@/hooks/use-header'
 
+import { CustomAvatar } from './avatar'
 import Notifications from './header-notifications'
-import { UserAvatar } from './user-avatar'
 
 export function AppHeader() {
   const { pageTitle } = useHeader()
+  const { barbershop } = useAuth()
 
   return (
     <header className='flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)'>
@@ -17,7 +19,11 @@ export function AppHeader() {
         <h1 className='text-base font-medium'>{pageTitle}</h1>
         <div className='ml-auto flex items-center gap-2'>
           <a href='/admin/dashboard' rel='noopener noreferrer'>
-            <UserAvatar />
+            <CustomAvatar
+              src={barbershop?.logo_url ?? undefined}
+              alt={barbershop?.company_name || undefined}
+              className='h-10 w-10 rounded-lg grayscale'
+            />
           </a>
         </div>
       </div>

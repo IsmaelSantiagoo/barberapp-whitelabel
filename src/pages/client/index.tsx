@@ -1,23 +1,27 @@
-import { CalendarIcon, ClipboardListIcon, InfoIcon } from 'lucide-react'
+import { CalendarIcon, ClipboardListIcon, InfoIcon, ScissorsIcon } from 'lucide-react'
 import { useNavigate } from 'react-router'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from '@/hooks/use-theme'
 
 export default function ClientHome() {
   const navigate = useNavigate()
   const { tokens } = useTheme()
+  const { barbershop } = useAuth()
 
   return (
     <div className='flex flex-col h-screen'>
       <div className='h-full flex flex-col justify-between py-50 px-10 gap-3'>
         <div className='flex items-center justify-center h-full flex-col gap-6'>
           <Avatar className='w-30 h-30'>
-            <AvatarImage src='https://gcdnb.pbrd.co/images/Pv1pphJwk4Xd.jpg?o=1' />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src={barbershop?.logo_url ?? '/default-logo.png'} />
+            <AvatarFallback>
+              <ScissorsIcon className='size-12' />
+            </AvatarFallback>
           </Avatar>
-          <h1 className='text-3xl font-bold text-center mb-2'>Cortês Barbearia</h1>
+          <h1 className='text-3xl font-bold text-center mb-2'>{barbershop?.company_name}</h1>
         </div>
 
         <Button
