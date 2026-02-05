@@ -1,9 +1,9 @@
 import { Navigate, type RouteObject } from 'react-router'
 
 import ClientHome from '@/pages/client'
-import ClientSchedule from '@/pages/client/agendar'
-import ClientInfoBarbershop from '@/pages/client/info-barbearia'
-import ClientMyAppointments from '@/pages/client/meus-agendamentos'
+import ClientInfoBarbershop from '@/pages/client/barber-info'
+import ClientMyAppointments from '@/pages/client/my-schedules'
+import ClientSchedule from '@/pages/client/schedule'
 
 export const ClientRoutes: RouteObject = {
   path: '',
@@ -17,15 +17,15 @@ export const ClientRoutes: RouteObject = {
       element: <ClientHome />,
     },
     {
-      path: 'agendar',
+      path: 'schedule',
       element: <ClientSchedule />,
     },
     {
-      path: 'meus-agendamentos',
+      path: 'my-schedules',
       element: <ClientMyAppointments />,
     },
     {
-      path: 'info-barbearia',
+      path: 'barber-info',
       element: <ClientInfoBarbershop />,
     },
     {

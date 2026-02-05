@@ -21,7 +21,7 @@ export default function ClientHome() {
         </div>
 
         <Button
-          onClick={() => navigate('/agendar')}
+          onClick={() => navigate('/schedule')}
           className='h-12 cursor-pointer text-lg border'
           style={{
             backgroundColor: tokens.primary,
@@ -33,7 +33,7 @@ export default function ClientHome() {
           <span className='text-lg'>Agendar Horário</span>
         </Button>
         <Button
-          onClick={() => navigate('/meus-agendamentos')}
+          onClick={() => navigate('/my-schedules')}
           className='h-12 cursor-pointer'
           variant='outline'
         >
@@ -41,7 +41,7 @@ export default function ClientHome() {
           <span className='text-lg'>Meus Agendamentos</span>
         </Button>
         <Button
-          onClick={() => navigate('/info-barbearia')}
+          onClick={() => navigate('/barber-info')}
           className='h-12 cursor-pointer'
           variant='ghost'
         >

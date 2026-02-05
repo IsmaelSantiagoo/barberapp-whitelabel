@@ -31,7 +31,7 @@ const data = {
     },
     {
       title: 'Horários',
-      url: '/admin/horarios',
+      url: '/admin/business-hours',
       icon: ClockIcon,
     },
   ],

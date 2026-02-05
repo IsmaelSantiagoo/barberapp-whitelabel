@@ -1,7 +1,7 @@
 import { Navigate, type RouteObject } from 'react-router'
 
+import AdminBusinessHours from '@/pages/admin/business_hours'
 import AdminDashboard from '@/pages/admin/dashboard'
-import AdminBusinessHours from '@/pages/admin/horarios'
 
 export const AdminRoutes: RouteObject = {
   path: '',
@@ -15,7 +15,7 @@ export const AdminRoutes: RouteObject = {
       element: <AdminDashboard />,
     },
     {
-      path: 'horarios',
+      path: 'business-hours',
       element: <AdminBusinessHours />,
     },
     {
