@@ -146,7 +146,12 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent>
               <div className='flex gap-2'>
-                <Input readOnly className='font-mono text-sm' />
+                <Input
+                  readOnly
+                  className='font-mono text-sm'
+                  placeholder='https://seu_link_aparecera_aqui.com'
+                  value={form.getValues('app_link')}
+                />
                 <Button variant='outline'>Copiar</Button>
               </div>
             </CardContent>

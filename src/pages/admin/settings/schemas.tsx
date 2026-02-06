@@ -8,6 +8,7 @@ const schema = z.object({
   address: z.string().optional(),
   instagram: z.string().optional(),
   logo_url: z.string().optional(),
+  app_link: z.string().optional(),
   primary_color: z
     .string()
     .min(7, 'A cor primária é obrigatória.')
@@ -22,6 +23,7 @@ export const defaultValues = (data?: BarberShop | null): Schema => ({
   address: data?.address || '',
   instagram: data?.instagram || '',
   logo_url: data?.logo_url || '',
+  app_link: data?.app_link || '',
   primary_color: data?.primary_color || '#000000',
 })
 
