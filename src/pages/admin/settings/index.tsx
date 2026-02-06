@@ -91,15 +91,6 @@ export default function AdminSettings() {
 
       if (data.success) {
         toast.success(data.message || 'Configurações salvas com sucesso.')
-
-        // atualiza a tela se o nome, cor ou logo tiverem sido alterados
-        if (
-          values.company_name !== barbershop?.company_name ||
-          values.primary_color !== barbershop?.primary_color ||
-          values.logo_url !== barbershop?.logo_url
-        ) {
-          window.location.reload()
-        }
       } else {
         toast.error(data.message || 'Erro ao salvar configurações.')
       }
@@ -113,10 +104,11 @@ export default function AdminSettings() {
 
   // atualizar formulário quando os dados da barbearia mudarem
   useEffect(() => {
-    form.reset(defaultValues(barbershop))
-
-    if (barbershop) setSpinners((prev) => ({ ...prev, page: false }))
-  }, [barbershop])
+    if (barbershop) {
+      form.reset(defaultValues(barbershop))
+      setSpinners((prev) => ({ ...prev, page: false }))
+    }
+  }, [barbershop?.id])
 
   if (spinners.page) {
     return <PageSkeleton />
@@ -136,7 +128,7 @@ export default function AdminSettings() {
           </Button>
         </div>
 
-        <p className='text-yellow-500'>
+        <p className='text-yellow-400 text-sm'>
           *As alterações podem levar alguns minutos para serem refletidas no aplicativo.
         </p>
       </div>
@@ -176,6 +168,9 @@ export default function AdminSettings() {
                       <Input placeholder='Nome da Barbearia' {...field} />
                     </FormControl>
                     <FormMessage />
+                    <span className='text-yellow-400 text-sm'>
+                      *Recarregue a página para ver as alterações refletidas.
+                    </span>
                   </FormItem>
                 )}
               />
@@ -299,6 +294,9 @@ export default function AdminSettings() {
                       </div>
                     </FormControl>
                     <FormMessage />
+                    <span className='text-yellow-400 text-sm'>
+                      *Recarregue a página para ver as alterações refletidas.
+                    </span>
                   </FormItem>
                 )}
               />

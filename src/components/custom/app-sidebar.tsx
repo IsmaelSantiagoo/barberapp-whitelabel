@@ -2,6 +2,7 @@ import * as React from 'react'
 
 import { Skeleton } from '../ui/skeleton'
 import { ClockIcon, LayoutDashboardIcon, ScissorsIcon, SettingsIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import {
   Sidebar,
@@ -60,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className='data-[slot=sidebar-menu-button]:p-1.5!'>
-              <a href='/admin/dashboard'>
+              <Link to='/admin/dashboard'>
                 <CustomAvatar
                   src={barbershop?.logo_url ?? undefined}
                   alt={barbershop?.company_name || undefined}
@@ -71,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ) : (
                   <span className='text-base font-semibold'>{barbershop?.company_name}</span>
                 )}
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

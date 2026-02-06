@@ -52,7 +52,6 @@ function showToastOnce(key: string, message: string, type: 'error' | 'warning' =
 axios.interceptors.response.use((response) => {
   if (response.status === 401) {
     // armazenar papel atual do usuário antes de limpar o localStorage
-    const userRole = localStorage.getItem('user_role')
     const shouldRedirect = showToastOnce('401-error', 'Sessão expirada. Faça login novamente.')
 
     if (shouldRedirect) {
@@ -60,8 +59,7 @@ axios.interceptors.response.use((response) => {
         sessionStorage.clear()
         localStorage.clear()
 
-        const isAdmin = userRole === 'admin' || userRole === 'owner'
-        window.location.href = isAdmin ? '/admin/login' : '/auth/login'
+        window.location.href = '/auth/login'
       }, 1500)
     }
   }

@@ -166,10 +166,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
         } else if (mode === 'event' && eventName) {
           // Quando usamos broadcastAs() no Laravel, o Echo espera o evento com ponto no início
           const listenEventName = eventName.startsWith('.') ? eventName : `.${eventName}`
-          console.log('[Echo] Ouvindo evento:', listenEventName, 'no canal:', channelName)
           channel.listen(listenEventName, (data: unknown) => {
-            console.log('[Echo] Evento recebido (raw):', data, 'tipo:', typeof data)
-
             // Se for string JSON, fazer parse
             let parsedData = data
             if (typeof data === 'string') {
@@ -179,8 +176,6 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
                 console.error('[Echo] Erro ao fazer parse dos dados:', e)
               }
             }
-
-            console.log('[Echo] Evento processado:', parsedData)
 
             if (!isUnmountedRef.current) {
               setMessages((prev) => [...prev, parsedData as Notification])
