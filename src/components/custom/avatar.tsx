@@ -10,11 +10,7 @@ interface CustomAvatarProps {
 export function CustomAvatar({ src, alt, className }: CustomAvatarProps) {
   return (
     <Avatar>
-      <AvatarImage
-        src={src || ''}
-        alt={alt || 'Profile Picture'}
-        className={`grayscale ${className}`}
-      />
+      <AvatarImage src={src || ''} alt={alt || 'Profile Picture'} className={className} />
       <AvatarFallback>
         {alt ? (
           alt

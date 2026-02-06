@@ -18,6 +18,7 @@ export interface BarberShop {
   domain: string | null
   primary_color: string
   logo_url: string | null
+  logo_file: string | null
   app_link: string | null
   address: string | null
   phone: string | null

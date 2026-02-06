@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
 import axios from '@/lib/axios'
 import type { ApiResponse } from '@/types/api-response'
@@ -25,7 +26,7 @@ import PageSkeleton from './skeletons'
 
 export default function AdminSettings() {
   // ==================== Dados Iniciais ====================
-  const { barbershop } = useAuth()
+  const { barbershop, refreshAuth } = useAuth()
 
   // ==================== States ====================
   const [spinners, setSpinners] = useState({
@@ -53,24 +54,99 @@ export default function AdminSettings() {
   })
 
   const previewLogoUrl = useWatch({ control: form.control, name: 'logo_url' })
+  const previewLogoFile = useWatch({ control: form.control, name: 'logo_file' })
   const previewCompanyName = useWatch({ control: form.control, name: 'company_name' })
   const previewPrimaryColor = useWatch({ control: form.control, name: 'primary_color' })
+  const previewLogoSrc = previewLogoFile || previewLogoUrl
+
+  const rgbToHex = (r: number, g: number, b: number) =>
+    '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')
+
+  const getDominantColor = (src: string): Promise<string | null> =>
+    new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const size = 32
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+
+        if (!ctx) {
+          resolve(null)
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, size, size)
+        const { data } = ctx.getImageData(0, 0, size, size)
+
+        let r = 0
+        let g = 0
+        let b = 0
+        let count = 0
+
+        for (let i = 0; i < data.length; i += 4) {
+          const alpha = data[i + 3]
+          if (alpha < 128) continue
+
+          r += data[i]
+          g += data[i + 1]
+          b += data[i + 2]
+          count += 1
+        }
+
+        if (!count) {
+          resolve(null)
+          return
+        }
+
+        resolve(rgbToHex(Math.round(r / count), Math.round(g / count), Math.round(b / count)))
+      }
+      img.onerror = () => resolve(null)
+      img.src = src
+    })
 
   // Reset logo error when URL changes
   useEffect(() => {
     setLogoError(false)
-  }, [previewLogoUrl])
+  }, [previewLogoUrl, previewLogoFile])
+
+  useEffect(() => {
+    if (!previewLogoSrc) return
+
+    let cancelled = false
+
+    getDominantColor(previewLogoSrc).then((color) => {
+      if (cancelled || !color) return
+      if (color.toLowerCase() === (previewPrimaryColor || '').toLowerCase()) return
+
+      form.setValue('primary_color', color, { shouldDirty: true, shouldValidate: true })
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [form, previewLogoSrc, previewPrimaryColor])
 
   // ==================== Submit ====================
   const onSubmit = async (values: Schema) => {
     // comparação manual para detectar mudanças
     const hasChanges =
-      values.company_name !== (barbershop?.company_name || '') ||
-      values.phone !== (barbershop?.phone || '') ||
-      values.address !== (barbershop?.address || '') ||
-      values.instagram !== (barbershop?.instagram || '') ||
-      values.logo_url !== (barbershop?.logo_url || '') ||
-      values.primary_color !== (barbershop?.primary_color || '#000000')
+      form.formState.dirtyFields.company_name ||
+      form.formState.dirtyFields.phone ||
+      form.formState.dirtyFields.address ||
+      form.formState.dirtyFields.instagram ||
+      form.formState.dirtyFields.logo_url ||
+      form.formState.dirtyFields.logo_file ||
+      form.formState.dirtyFields.primary_color
+
+    const shouldRefreshAuth = !!(
+      form.formState.dirtyFields.company_name ||
+      form.formState.dirtyFields.logo_url ||
+      form.formState.dirtyFields.logo_file ||
+      form.formState.dirtyFields.primary_color
+    )
 
     // validando se há alterações no formulário
     if (!hasChanges) {
@@ -92,6 +168,9 @@ export default function AdminSettings() {
 
       if (data.success) {
         toast.success(data.message || 'Configurações salvas com sucesso.')
+        if (shouldRefreshAuth) {
+          refreshAuth() // recarrega os dados de autenticação para atualizar as informações da barbearia
+        }
       } else {
         toast.error(data.message || 'Erro ao salvar configurações.')
       }
@@ -109,7 +188,7 @@ export default function AdminSettings() {
       form.reset(defaultValues(barbershop))
       setSpinners((prev) => ({ ...prev, page: false }))
     }
-  }, [barbershop?.id])
+  }, [barbershop])
 
   // ==================== Copiar Link do App ====================
   const handleCopyAppLink = () => {
@@ -160,7 +239,8 @@ export default function AdminSettings() {
               <div className='flex gap-2'>
                 <Input
                   readOnly
-                  className='font-mono text-sm'
+                  type='url'
+                  className='font-mono'
                   placeholder='https://seu_link_aparecera_aqui.com'
                   value={form.getValues('app_link')}
                 />
@@ -187,9 +267,6 @@ export default function AdminSettings() {
                       <Input placeholder='Nome da Barbearia' {...field} />
                     </FormControl>
                     <FormMessage />
-                    <span className='text-yellow-400 text-sm'>
-                      *Recarregue a página para ver as alterações refletidas.
-                    </span>
                   </FormItem>
                 )}
               />
@@ -256,28 +333,81 @@ export default function AdminSettings() {
               <CardDescription>Customize a aparência do seu app</CardDescription>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <FormField
-                control={form.control}
-                name='logo_url'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>URL do Logo</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='https://exemplo.com/logo.png'
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    {previewLogoUrl && logoError && (
-                      <p className='text-xs text-destructive mt-1'>
-                        Erro ao carregar imagem. Verifique a URL.
-                      </p>
+              <Tabs
+                defaultValue='url'
+                onValueChange={() => {
+                  const isFilled =
+                    form.getValues('logo_url')!.length > 0 || form.getValues('logo_file') !== null
+
+                  if (!isFilled) form.setValue('logo_url', '')
+                }}
+              >
+                <TabsList>
+                  <TabsTrigger value='url'>URL</TabsTrigger>
+                  <TabsTrigger value='file'>Arquivo</TabsTrigger>
+                </TabsList>
+                <TabsContent value='url'>
+                  <FormField
+                    control={form.control}
+                    name='logo_url'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>URL do Logo</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='url'
+                            className='font-mono'
+                            placeholder='https://exemplo.com/logo.png'
+                            {...field}
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        {previewLogoUrl && logoError && (
+                          <p className='text-xs text-destructive mt-1'>
+                            Erro ao carregar imagem. Verifique a URL.
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
                     )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  />
+                </TabsContent>
+                <TabsContent value='file'>
+                  <FormField
+                    control={form.control}
+                    name='logo_file'
+                    render={({ field }) => {
+                      const { onChange, value: _value, ...fieldProps } = field
+
+                      return (
+                        <FormItem>
+                          <FormLabel>Arquivo do Logo</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='file'
+                              {...fieldProps}
+                              onChange={(event) => {
+                                const file = event.target.files?.[0]
+                                if (file) {
+                                  const reader = new FileReader()
+                                  reader.onloadend = () => {
+                                    const base64String = reader.result as string
+                                    onChange(base64String)
+                                  }
+                                  reader.readAsDataURL(file)
+                                } else {
+                                  onChange(null)
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
 
               <FormField
                 control={form.control}
@@ -286,7 +416,7 @@ export default function AdminSettings() {
                   <FormItem>
                     <FormLabel required>Cor Principal</FormLabel>
                     <FormControl>
-                      <div className='flex gap-3'>
+                      <div className='flex gap-2'>
                         <Input
                           type='color'
                           value={field.value || '#000000'}
@@ -313,9 +443,6 @@ export default function AdminSettings() {
                       </div>
                     </FormControl>
                     <FormMessage />
-                    <span className='text-yellow-400 text-sm'>
-                      *Recarregue a página para ver as alterações refletidas.
-                    </span>
                   </FormItem>
                 )}
               />
@@ -325,9 +452,9 @@ export default function AdminSettings() {
                 <p className='text-sm text-muted-foreground mb-3'>Prévia</p>
                 <div className='flex items-center gap-3'>
                   <div className='w-12 h-12 rounded-full flex items-center justify-center bg-muted'>
-                    {previewLogoUrl && !logoError ? (
+                    {previewLogoSrc && !logoError ? (
                       <img
-                        src={previewLogoUrl}
+                        src={previewLogoSrc}
                         alt='Logo'
                         className='w-12 h-12 rounded-full object-cover'
                         onError={() => setLogoError(true)}

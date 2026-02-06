@@ -54,6 +54,9 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { barbershop, loading } = useAuth()
+  const logoSrc = barbershop?.logo_url
+    ? `${barbershop.logo_url}${barbershop.logo_url.includes('?') ? '&' : '?'}v=${barbershop.updated_at}`
+    : undefined
 
   return (
     <Sidebar collapsible='offcanvas' {...props}>
@@ -63,9 +66,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton asChild className='data-[slot=sidebar-menu-button]:p-1.5!'>
               <Link to='/admin/dashboard'>
                 <CustomAvatar
-                  src={barbershop?.logo_url ?? undefined}
+                  src={logoSrc}
                   alt={barbershop?.company_name || undefined}
-                  className='h-10 w-10 rounded-lg grayscale'
+                  className='h-10 w-10 rounded-lg'
                 />
                 {loading ? (
                   <Skeleton className='w-full p-2' />

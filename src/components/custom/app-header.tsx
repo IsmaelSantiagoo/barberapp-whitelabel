@@ -9,6 +9,9 @@ import Notifications from './header-notifications'
 export function AppHeader() {
   const { pageTitle } = useHeader()
   const { barbershop } = useAuth()
+  const logoSrc = barbershop?.logo_url
+    ? `${barbershop.logo_url}${barbershop.logo_url.includes('?') ? '&' : '?'}v=${barbershop.updated_at}`
+    : undefined
 
   return (
     <header className='flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)'>
@@ -20,9 +23,9 @@ export function AppHeader() {
         <div className='ml-auto flex items-center gap-2'>
           <a href='/admin/dashboard' rel='noopener noreferrer'>
             <CustomAvatar
-              src={barbershop?.logo_url ?? undefined}
+              src={logoSrc}
               alt={barbershop?.company_name || undefined}
-              className='h-10 w-10 rounded-lg grayscale'
+              className='h-10 w-10 rounded-lg'
             />
           </a>
         </div>

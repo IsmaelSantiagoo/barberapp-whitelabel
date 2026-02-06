@@ -17,6 +17,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   setLoading: (loading: boolean) => void
+  refreshAuth: () => Promise<void>
   signIn: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   signUp: (signUpData: Schema) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
@@ -45,49 +46,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setState((prev) => ({ ...prev, loading }))
   }
 
-  // Carrega os dados do usuário e barbershop ao inicializar se tiver token
-  useEffect(() => {
-    const loadAuthData = async () => {
-      const token = localStorage.getItem('auth_token')
+  const loadAuthData = async () => {
+    const token = localStorage.getItem('auth_token')
 
-      if (!token) {
-        setState((prev) => ({ ...prev, loading: false }))
-        return
-      }
-
-      try {
-        // Busca dados do usuário autenticado
-        const userResponse = await axios.get<ApiResponse<User & { barbershop: BarberShop }>>(
-          `${API_URL}/auth/me`
-        )
-
-        if (!userResponse.data.success) {
-          throw new Error('Erro ao carregar usuário')
-        }
-
-        setState({
-          user: userResponse.data.data,
-          token,
-          userRole: userResponse.data.data.role,
-          barbershop: userResponse.data.data.barbershop,
-          loading: false,
-        })
-      } catch (error) {
-        console.error('Erro ao carregar dados de autenticação:', error)
-        // Limpa dados inválidos
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('user_role')
-        sessionStorage.removeItem('active_barbershop_id')
-        setState({
-          user: null,
-          token: null,
-          userRole: null,
-          barbershop: null,
-          loading: false,
-        })
-      }
+    if (!token) {
+      setState((prev) => ({ ...prev, loading: false }))
+      return
     }
 
+    try {
+      // Busca dados do usuário autenticado
+      const userResponse = await axios.get<ApiResponse<User & { barbershop: BarberShop }>>(
+        `${API_URL}/auth/me`
+      )
+
+      if (!userResponse.data.success) {
+        throw new Error('Erro ao carregar usuário')
+      }
+
+      setState({
+        user: userResponse.data.data,
+        token,
+        userRole: userResponse.data.data.role,
+        barbershop: userResponse.data.data.barbershop,
+        loading: false,
+      })
+    } catch (error) {
+      console.error('Erro ao carregar dados de autenticação:', error)
+      // Limpa dados inválidos
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user_role')
+      sessionStorage.removeItem('active_barbershop_id')
+      setState({
+        user: null,
+        token: null,
+        userRole: null,
+        barbershop: null,
+        loading: false,
+      })
+    }
+  }
+
+  // Carrega os dados do usuário e barbershop ao inicializar se tiver token
+  useEffect(() => {
     loadAuthData()
   }, [])
 
@@ -197,6 +198,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextType = {
     ...state,
+    refreshAuth: loadAuthData,
     setLoading,
     signIn,
     signUp,
