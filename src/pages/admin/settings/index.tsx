@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LinkIcon, SaveIcon, ScissorsIcon } from 'lucide-react'
+import { CheckIcon, CopyIcon, LinkIcon, SaveIcon, ScissorsIcon } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -33,6 +33,7 @@ export default function AdminSettings() {
     submitting: false,
   })
   const [logoError, setLogoError] = useState(false)
+  const [appLinkCopied, setAppLinkCopied] = useState(false)
   // ==================== Utils ====================
   const formatPhoneDisplay = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '')
@@ -110,6 +111,17 @@ export default function AdminSettings() {
     }
   }, [barbershop?.id])
 
+  // ==================== Copiar Link do App ====================
+  const handleCopyAppLink = () => {
+    const appLink = form.getValues('app_link')
+    if (appLink) {
+      navigator.clipboard.writeText(appLink)
+      setAppLinkCopied(true)
+      toast.success('Link do app copiado para a área de transferência!')
+      setTimeout(() => setAppLinkCopied(false), 2000)
+    }
+  }
+
   if (spinners.page) {
     return <PageSkeleton />
   }
@@ -152,7 +164,9 @@ export default function AdminSettings() {
                   placeholder='https://seu_link_aparecera_aqui.com'
                   value={form.getValues('app_link')}
                 />
-                <Button variant='outline'>Copiar</Button>
+                <Button type='button' variant='outline' size='icon' onClick={handleCopyAppLink}>
+                  {appLinkCopied ? <CheckIcon /> : <CopyIcon />}
+                </Button>
               </div>
             </CardContent>
           </Card>
