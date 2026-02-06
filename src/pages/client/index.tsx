@@ -16,7 +16,7 @@ export default function ClientHome() {
       <div className='h-full flex flex-col justify-between py-50 px-10 gap-3'>
         <div className='flex items-center justify-center h-full flex-col gap-6'>
           <Avatar className='w-30 h-30'>
-            <AvatarImage src={barbershop?.logo_url ?? '/default-logo.png'} />
+            <AvatarImage src={barbershop?.logo_url ?? ''} />
             <AvatarFallback>
               <ScissorsIcon className='size-12' />
             </AvatarFallback>

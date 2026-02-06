@@ -50,7 +50,7 @@ export default function AuthPage() {
   })
 
   const navigate = useNavigate()
-  const { signIn, signUp, loading, isAuthenticated } = useAuth()
+  const { signIn, signUp, loading, setLoading, isAuthenticated } = useAuth()
 
   // Verifica se a barbearia existe (apenas no modo client)
   useEffect(() => {
@@ -87,6 +87,7 @@ export default function AuthPage() {
         setBarbershopExists(false)
       } finally {
         setCheckingBarbershop(false)
+        setLoading?.(false)
       }
     }
 
@@ -94,7 +95,7 @@ export default function AuthPage() {
   }, [])
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
+  if (isAuthenticated && appMode === 'admin') {
     navigate('/admin/dashboard')
     return null
   }
