@@ -367,7 +367,7 @@ export default function AuthPage() {
         <div className='flex flex-col h-full justify-between'>
           <div className='flex flex-col items-center justify-center h-full gap-3'>
             <Avatar className='w-30 h-30'>
-              <AvatarImage src='https://gcdnb.pbrd.co/images/Pv1pphJwk4Xd.jpg?o=1' />
+              <AvatarImage src='https://squealing-emerald-hue6zyv4nh.edgeone.app/full-light.png' />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
             <h1 className='text-2xl font-bold'>Vamos Começar</h1>
