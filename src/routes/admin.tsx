@@ -4,6 +4,8 @@ import AdminBusinessHours from '@/pages/admin/business_hours'
 import AdminDashboard from '@/pages/admin/dashboard'
 import AdminServices from '@/pages/admin/services'
 import AdminSettings from '@/pages/admin/settings'
+import AdminAccountSettings from '@/pages/admin/settings/account'
+import AdminPanelSettings from '@/pages/admin/settings/panel'
 
 export const AdminRoutes: RouteObject = {
   path: '',
@@ -27,6 +29,14 @@ export const AdminRoutes: RouteObject = {
     {
       path: 'settings',
       element: <AdminSettings />,
+    },
+    {
+      path: 'settings/account',
+      element: <AdminAccountSettings />,
+    },
+    {
+      path: 'settings/panel',
+      element: <AdminPanelSettings />,
     },
     {
       path: '*',

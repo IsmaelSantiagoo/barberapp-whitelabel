@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckIcon, CopyIcon, LinkIcon, SaveIcon, ScissorsIcon } from 'lucide-react'
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  CopyIcon,
+  LinkIcon,
+  PaletteIcon,
+  SaveIcon,
+  ScissorsIcon,
+  UserIcon,
+} from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -226,6 +236,26 @@ export default function AdminSettings() {
 
       <Form {...form}>
         <form className='space-y-6'>
+          {/* Configurações */}
+          <div className='flex gap-3'>
+            <Link to='account' className='flex-1'>
+              <Button type='button' className='size-12 w-full' variant='outline'>
+                <span className='flex items-center gap-2'>
+                  <UserIcon className='h-4 w-4' /> Minha Conta
+                </span>
+                <ChevronRightIcon className='h-4 w-4' />
+              </Button>
+            </Link>
+            <Link to='panel' className='flex-1'>
+              <Button type='button' className='size-12 w-full' variant='outline'>
+                <span className='flex items-center gap-2'>
+                  <PaletteIcon className='h-4 w-4' /> Configurações do Painel
+                </span>
+                <ChevronRightIcon className='h-4 w-4' />
+              </Button>
+            </Link>
+          </div>
+
           {/* App Link */}
           <Card>
             <CardHeader>

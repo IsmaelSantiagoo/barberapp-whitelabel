@@ -45,7 +45,7 @@ const data = {
   ],
   sidebarSecondary: [
     {
-      title: 'Settings',
+      title: 'Configurações',
       url: '/admin/settings',
       icon: SettingsIcon,
     },

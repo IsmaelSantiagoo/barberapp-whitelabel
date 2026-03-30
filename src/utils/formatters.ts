@@ -21,3 +21,7 @@ export function phoneFormatter(phone: string): string {
   }
   return phone
 }
+
+export function phoneUnformatter(phone: string): string {
+  return phone.replace(/\D/g, '')
+}
