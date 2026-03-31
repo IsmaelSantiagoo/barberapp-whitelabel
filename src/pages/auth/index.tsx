@@ -5,6 +5,7 @@ import {
   Building2Icon,
   EyeIcon,
   EyeOffIcon,
+  Loader2Icon,
   LockIcon,
   MailIcon,
   PhoneIcon,
@@ -160,6 +161,7 @@ export default function AuthPage() {
   }
 
   const handleSubmit = async (data: Schema) => {
+    setSubmitting(true)
     if (params.get('register') === 'true') {
       try {
         const { success, message } = await signUp(data)
@@ -173,6 +175,8 @@ export default function AuthPage() {
       } catch (error) {
         console.error('Register error:', error)
         toast.error('Não foi possível fazer registro. Tente novamente.')
+      } finally {
+        setSubmitting(false)
       }
     } else {
       try {
@@ -187,6 +191,8 @@ export default function AuthPage() {
       } catch (error) {
         console.error('Login error:', error)
         toast.error('Não foi possível fazer login. Tente novamente.')
+      } finally {
+        setSubmitting(false)
       }
     }
   }
@@ -456,12 +462,14 @@ export default function AuthPage() {
                   <Button
                     className='cursor-pointer border'
                     type='submit'
+                    disabled={submitting}
                     style={{
                       backgroundColor: tokens.primary,
                       borderColor: tokens.border,
                       color: tokens.onPrimary,
                     }}
                   >
+                    {submitting && <Loader2Icon className='mr-2 h-4 w-4 animate-spin' />}
                     {params.get('register') === 'true' ? 'Cadastrar' : 'Entrar'}
                   </Button>
                   <Button className='cursor-pointer' variant='outline' type='button'>
