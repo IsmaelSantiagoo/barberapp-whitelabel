@@ -37,10 +37,12 @@ import schema, { defaultValues } from './schemas'
 interface ServiceFormProps {
   children?: React.ReactNode
   service?: Service
+  isDuplicate?: boolean
   onClose: () => void
 }
 
-export default function ServiceForm({ children, service, onClose }: ServiceFormProps) {
+export default function ServiceForm({ children, service, isDuplicate, onClose }: ServiceFormProps) {
+  const isEditing = service && !isDuplicate
   const [open, setOpen] = useState(false)
   const [spinners, setSpinners] = useState({
     general: false,
@@ -49,7 +51,10 @@ export default function ServiceForm({ children, service, onClose }: ServiceFormP
 
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues(service),
+    defaultValues:
+      isDuplicate && service
+        ? { ...defaultValues(service), id: null, name: `${service.name} (cópia)` }
+        : defaultValues(service),
     mode: 'onSubmit',
   })
 
@@ -57,8 +62,8 @@ export default function ServiceForm({ children, service, onClose }: ServiceFormP
     setSpinners((prev) => ({ ...prev, submiting: true }))
 
     try {
-      const response = await axios[service ? 'put' : 'post']<ApiResponse>(
-        `services${service ? `/${service.id}` : ''}`,
+      const response = await axios[isEditing ? 'put' : 'post']<ApiResponse>(
+        `services${isEditing ? `/${service.id}` : ''}`,
         values
       )
 
@@ -95,9 +100,15 @@ export default function ServiceForm({ children, service, onClose }: ServiceFormP
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{service ? 'Editar Serviço' : 'Novo Serviço'}</DialogTitle>
+          <DialogTitle>
+            {isDuplicate ? 'Duplicar Serviço' : isEditing ? 'Editar Serviço' : 'Novo Serviço'}
+          </DialogTitle>
           <DialogDescription>
-            {service ? 'Atualize as informações do serviço.' : 'Preencha os dados do novo serviço.'}
+            {isDuplicate
+              ? 'Revise os dados e salve a cópia do serviço.'
+              : isEditing
+                ? 'Atualize as informações do serviço.'
+                : 'Preencha os dados do novo serviço.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -180,10 +191,7 @@ export default function ServiceForm({ children, service, onClose }: ServiceFormP
                   type='button'
                   variant='outline'
                   className='w-full sm:w-auto'
-                  onClick={() => {
-                    form.reset()
-                    onClose()
-                  }}
+                  onClick={() => form.reset()}
                 >
                   Cancelar
                 </Button>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { PencilIcon, Trash2Icon } from 'lucide-react'
+import { CopyIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import Alert from '@/components/custom/alert-dialog'
@@ -93,6 +93,11 @@ export const columns = (reload?: () => void): ColumnDef<Service>[] => [
     cellAlign: 'center',
     renderCell: (_value, row): ReactNode => (
       <div className='flex gap-2 justify-center'>
+        <ServiceForm service={row} isDuplicate onClose={() => reload && reload()}>
+          <Button size='icon' variant='outline'>
+            <CopyIcon className='text-blue-400' />
+          </Button>
+        </ServiceForm>
         <ServiceForm service={row} onClose={() => reload && reload()}>
           <Button size='icon' variant='outline'>
             <PencilIcon className='text-yellow-400' />
