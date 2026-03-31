@@ -173,7 +173,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         })
 
         const { message } = response.data
-        if (!response.data.success) throw new Error(message || 'Erro ao registrar')
+        if (!response.data.success)
+          throw new Error(message || response.data.errors?.email?.[0] || 'Erro ao registrar')
 
         const loginResult = await signIn(signUpData.email, signUpData.password)
         return loginResult
@@ -186,7 +187,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         })
 
         const { message } = response.data
-        if (!response.data.success) throw new Error(message || 'Erro ao registrar')
+        if (!response.data.success)
+          throw new Error(message || response.data.errors?.email?.[0] || 'Erro ao registrar')
 
         const loginResult = await signIn(signUpData.email, signUpData.password)
         return loginResult
