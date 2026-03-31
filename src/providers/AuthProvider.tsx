@@ -137,6 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return { success: true, message: 'Login realizado com sucesso!' }
     } catch (error: any) {
+      console.error('Erro ao fazer login:', error)
       return { success: false, message: error.message }
     }
   }
