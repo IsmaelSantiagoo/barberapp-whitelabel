@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -6,8 +6,8 @@ import {
   ChevronRightIcon,
   CopyIcon,
   LinkIcon,
+  Loader2Icon,
   PaletteIcon,
-  SaveIcon,
   ScissorsIcon,
   UserIcon,
 } from 'lucide-react'
@@ -45,6 +45,8 @@ export default function AdminSettings() {
   })
   const [logoError, setLogoError] = useState(false)
   const [appLinkCopied, setAppLinkCopied] = useState(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>()
   // ==================== Utils ====================
   const formatPhoneDisplay = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '')
@@ -60,7 +62,7 @@ export default function AdminSettings() {
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues(barbershop),
-    mode: 'onSubmit',
+    mode: 'onBlur',
   })
 
   const previewLogoUrl = useWatch({ control: form.control, name: 'logo_url' })
@@ -141,7 +143,6 @@ export default function AdminSettings() {
 
   // ==================== Submit ====================
   const onSubmit = async (values: Schema) => {
-    // comparação manual para detectar mudanças
     const hasChanges =
       form.formState.dirtyFields.company_name ||
       form.formState.dirtyFields.phone ||
@@ -158,39 +159,53 @@ export default function AdminSettings() {
       form.formState.dirtyFields.primary_color
     )
 
-    // validando se há alterações no formulário
-    if (!hasChanges) {
-      toast.info('Nenhuma alteração para salvar.')
-      return
-    }
+    if (!hasChanges) return
 
-    // validando se a imagem do logo carregou corretamente
     if (previewLogoUrl && logoError) {
       toast.error('Erro ao carregar o logo. Verifique a URL.')
       return
     }
 
     setSpinners((prev) => ({ ...prev, submitting: true }))
+    setAutoSaveStatus('saving')
 
     try {
       const response = await axios.put<ApiResponse>(`/barber-shops/${barbershop?.id}`, values)
       const { data } = response
 
       if (data.success) {
-        toast.success(data.message || 'Configurações salvas com sucesso.')
+        setAutoSaveStatus('saved')
+        form.reset(values)
         if (shouldRefreshAuth) {
-          refreshAuth() // recarrega os dados de autenticação para atualizar as informações da barbearia
+          refreshAuth()
         }
+        setTimeout(() => setAutoSaveStatus('idle'), 3000)
       } else {
         toast.error(data.message || 'Erro ao salvar configurações.')
+        setAutoSaveStatus('idle')
       }
     } catch (error) {
       console.error(error)
       toast.error('Erro ao salvar configurações.')
+      setAutoSaveStatus('idle')
     } finally {
       setSpinners((prev) => ({ ...prev, submitting: false }))
     }
   }
+
+  // ==================== Auto-save ====================
+  const handleAutoSave = () => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+    autoSaveTimerRef.current = setTimeout(() => {
+      form.handleSubmit(onSubmit)()
+    }, 500)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+    }
+  }, [])
 
   // atualizar formulário quando os dados da barbearia mudarem
   useEffect(() => {
@@ -223,10 +238,20 @@ export default function AdminSettings() {
             <h1 className='text-2xl font-bold hidden lg:block'>Configurações</h1>
             <p className='text-muted-foreground'>Personalize sua barbearia</p>
           </div>
-          <Button onClick={form.handleSubmit(onSubmit)} disabled={spinners.submitting}>
-            <SaveIcon className='mr-2 h-4 w-4' />
-            Salvar
-          </Button>
+          <div className='flex items-center gap-2 text-sm'>
+            {autoSaveStatus === 'saving' && (
+              <span className='flex items-center gap-1.5 text-muted-foreground'>
+                <Loader2Icon className='h-4 w-4 animate-spin' />
+                Salvando...
+              </span>
+            )}
+            {autoSaveStatus === 'saved' && (
+              <span className='flex items-center gap-1.5 text-green-500'>
+                <CheckIcon className='h-4 w-4' />
+                Salvo
+              </span>
+            )}
+          </div>
         </div>
 
         <p className='text-yellow-400 text-sm'>
@@ -235,7 +260,7 @@ export default function AdminSettings() {
       </div>
 
       <Form {...form}>
-        <form className='space-y-6'>
+        <form className='space-y-6' onBlur={handleAutoSave}>
           {/* Configurações */}
           <div className='flex gap-3'>
             <Link to='account' className='flex-1'>
