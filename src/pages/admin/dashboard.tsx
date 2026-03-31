@@ -13,6 +13,7 @@ import Loader from '@/components/custom/loader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/hooks/use-auth'
 import useEcho from '@/hooks/use-echo'
 import { useHeader } from '@/hooks/use-header'
@@ -23,9 +24,12 @@ import type { ApiResponse } from '@/types/api-response'
 import type { Appointment } from '@/types/consults'
 import { nameFormatter } from '@/utils/formatters'
 
+type StatusFilter = 'all' | '0' | '1' | '2'
+
 export default function AdminDashboard() {
   const { user } = useAuth()
   const { setPageTitle } = useHeader()
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [spinners, setSpinners] = useState({
     general: false,
     refresh: false,
@@ -49,6 +53,13 @@ export default function AdminDashboard() {
     fetchStats()
   }, [messages])
 
+  /**
+   * refetch quando o filtro mudar
+   */
+  useEffect(() => {
+    fetchStats()
+  }, [statusFilter])
+
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [stats, setStats] = useState({
     today: 0,
@@ -62,16 +73,17 @@ export default function AdminDashboard() {
     setSpinners((prev) => ({ ...prev, general: true, refresh: isRefresh }))
 
     try {
-      const response = await axios.get<ApiResponse<Appointment[]>>('/dashboard/today_appointments')
+      const response = await axios.get<
+        ApiResponse<Appointment[]> & {
+          stats: { today: number; pending: number; confirmed: number; cancelled: number }
+        }
+      >('/dashboard/today_appointments', {
+        params: { status: statusFilter },
+      })
 
       if (response.data.success) {
         setAppointments(response.data.data)
-        setStats({
-          today: response.data.data.filter((apt) => ['0', '1'].includes(apt.status)).length,
-          pending: response.data.data.filter((appointment) => appointment.status === '0').length,
-          confirmed: response.data.data.filter((appointment) => appointment.status === '1').length,
-          cancelled: response.data.data.filter((appointment) => appointment.status === '2').length,
-        })
+        setStats(response.data.stats)
       } else {
         toast.error(response.data.message || 'Erro ao buscar agendamentos.')
       }
@@ -96,32 +108,49 @@ export default function AdminDashboard() {
     }
   }
 
-  const cards = [
+  const cards: {
+    title: string
+    ammount: number | string
+    icon: React.ReactNode
+    className: string
+    filter: StatusFilter
+  }[] = [
     {
       title: 'Hoje',
       ammount: spinners.general ? '...' : stats.today,
       icon: <CalendarIcon className='h-5 w-5 text-blue-600 dark:text-white' />,
       className: 'bg-blue-100 dark:bg-blue-600',
+      filter: 'all',
     },
     {
       title: 'Pendentes',
       ammount: spinners.general ? '...' : stats.pending,
       icon: <AlertCircleIcon className='h-5 w-5 text-yellow-600 dark:text-white' />,
       className: 'bg-yellow-100 dark:bg-yellow-600',
+      filter: '0',
     },
     {
       title: 'Confirmados',
       ammount: spinners.general ? '...' : stats.confirmed,
       icon: <CheckCircle2Icon className='h-5 w-5 text-green-600 dark:text-white' />,
       className: 'bg-green-100 dark:bg-green-600',
+      filter: '1',
     },
     {
       title: 'Cancelados',
       ammount: spinners.general ? '...' : stats.cancelled,
       icon: <CircleXIcon className='h-5 w-5 text-red-600 dark:text-white' />,
       className: 'bg-red-100 dark:bg-red-600',
+      filter: '2',
     },
   ]
+
+  const filterLabels: Record<StatusFilter, string> = {
+    'all': 'Todos',
+    '0': 'Pendentes',
+    '1': 'Confirmados',
+    '2': 'Cancelados',
+  }
 
   return (
     <div>
@@ -153,7 +182,13 @@ export default function AdminDashboard() {
         {/* Stats */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
           {cards.map((card, index) => (
-            <Card key={index}>
+            <Card
+              key={index}
+              className={cn('cursor-pointer transition-all', {
+                'ring-2 ring-primary': statusFilter === card.filter,
+              })}
+              onClick={() => setStatusFilter(card.filter)}
+            >
               <CardContent className='flex items-center gap-4'>
                 <div className={cn('p-3 rounded-full', card.className)}>{card.icon}</div>
                 <div>
@@ -167,9 +202,25 @@ export default function AdminDashboard() {
 
         {/* Today's Appointments */}
         <Card>
-          <CardHeader>
-            <CardTitle>Agendamentos de Hoje</CardTitle>
-            <CardDescription>{stats.today} agendamento(s)</CardDescription>
+          <CardHeader className='flex flex-row items-center justify-between'>
+            <div>
+              <CardTitle>Agendamentos de Hoje</CardTitle>
+              <CardDescription>
+                {appointments.length} agendamento(s)
+                {statusFilter !== 'all' && ` — ${filterLabels[statusFilter]}`}
+              </CardDescription>
+            </div>
+            <Tabs
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+            >
+              <TabsList>
+                <TabsTrigger value='all'>Todos</TabsTrigger>
+                <TabsTrigger value='0'>Pendentes</TabsTrigger>
+                <TabsTrigger value='1'>Confirmados</TabsTrigger>
+                <TabsTrigger value='2'>Cancelados</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardHeader>
           <CardContent>
             {spinners.general ? (
