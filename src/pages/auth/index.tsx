@@ -42,6 +42,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [barbershopExists, setBarbershopExists] = useState<boolean | null>(null)
   const [checkingBarbershop, setCheckingBarbershop] = useState(appMode === 'client')
+  const [logoSrc, setLogoSrc] = useState<string | null>(null)
 
   const form = useForm<Schema>({
     resolver: zodResolver(schema(params.get('register') === 'true')),
@@ -74,6 +75,7 @@ export default function AuthPage() {
             window.dispatchEvent(new Event('barbershop-color-change'))
           }
 
+          setLogoSrc(response.data.data.logo_url || null)
           setBarbershopExists(true)
         } else {
           localStorage.removeItem('barbershop_primary_color')
@@ -367,7 +369,9 @@ export default function AuthPage() {
         <div className='flex flex-col h-full justify-between'>
           <div className='flex flex-col items-center justify-center h-full gap-3'>
             <Avatar className='w-30 h-30'>
-              <AvatarImage src='https://squealing-emerald-hue6zyv4nh.edgeone.app/full-light.png' />
+              <AvatarImage
+                src={logoSrc || 'https://squealing-emerald-hue6zyv4nh.edgeone.app/full-light.png'}
+              />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
             <h1 className='text-2xl font-bold'>Vamos Começar</h1>
