@@ -25,3 +25,20 @@ export function phoneFormatter(phone: string): string {
 export function phoneUnformatter(phone: string): string {
   return phone.replace(/\D/g, '')
 }
+
+/**
+ * Formata telefone brasileiro em tempo real conforme o usuário digita.
+ * Suporta celular (11 dígitos) e fixo (10 dígitos).
+ * Formato: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+ */
+export function phoneMask(value: string): string {
+  const cleaned = value.replace(/\D/g, '')
+
+  if (cleaned.length <= 2) return cleaned
+  if (cleaned.length <= 6) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
+  if (cleaned.length <= 10) {
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`
+  }
+  // Celular com 9 dígitos
+  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`
+}

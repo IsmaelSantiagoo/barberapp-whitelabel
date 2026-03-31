@@ -21,6 +21,9 @@ interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; message: string }>
   signUp: (signUpData: Schema) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
+  requestOtp: (phone: string, name: string) => Promise<{ success: boolean; message: string }>
+  verifyOtp: (phone: string, code: string) => Promise<{ success: boolean; message: string }>
+  autoLogin: () => Promise<{ success: boolean; message: string }>
   isAuthenticated: boolean
 }
 
@@ -48,6 +51,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const loadAuthData = async () => {
     const token = localStorage.getItem('auth_token')
+
+    // No modo client, tentar auto-login via device_token se não tiver auth_token
+    if (!token && appMode === 'client') {
+      const deviceToken = localStorage.getItem('device_token')
+      const phone = localStorage.getItem('client_phone')
+
+      if (deviceToken && phone) {
+        try {
+          const response = await axios.post<
+            ApiResponse<{ user: User; barbershop: BarberShop; access_token: string }>
+          >(`${API_URL}/auth/client/auto-login`, {
+            device_token: deviceToken,
+            phone,
+          })
+
+          if (response.data.success) {
+            const { data } = response.data
+            localStorage.setItem('auth_token', data.access_token)
+            localStorage.setItem('user_role', data.user.role)
+
+            setState({
+              user: data.user,
+              token: data.access_token,
+              userRole: data.user.role,
+              barbershop: data.barbershop,
+              loading: false,
+            })
+            return
+          }
+        } catch {
+          // Auto-login falhou, limpar device_token
+          localStorage.removeItem('device_token')
+          localStorage.removeItem('client_phone')
+        }
+      }
+
+      setState((prev) => ({ ...prev, loading: false }))
+      return
+    }
 
     if (!token) {
       setState((prev) => ({ ...prev, loading: false }))
@@ -95,6 +137,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logoutCleanup = () => {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user_role')
+    localStorage.removeItem('device_token')
+    localStorage.removeItem('client_phone')
     sessionStorage.removeItem('active_barbershop_id')
     setState({
       user: null,
@@ -199,6 +243,114 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const requestOtp = async (
+    phone: string,
+    name: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await axios.post<ApiResponse>(`${API_URL}/auth/client/request-otp`, {
+        phone,
+        name,
+      })
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Erro ao enviar código')
+      }
+
+      return { success: true, message: response.data.message || 'Código enviado!' }
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message || 'Erro ao enviar código'
+      return { success: false, message }
+    }
+  }
+
+  const verifyOtp = async (
+    phone: string,
+    code: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await axios.post<
+        ApiResponse<{
+          user: User
+          barbershop: BarberShop
+          access_token: string
+          device_token: string
+        }>
+      >(`${API_URL}/auth/client/verify-otp`, {
+        phone,
+        code,
+      })
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Código inválido')
+      }
+
+      const { data } = response.data
+
+      // Salvar tokens e phone
+      localStorage.setItem('auth_token', data.access_token)
+      localStorage.setItem('user_role', data.user.role)
+      localStorage.setItem('device_token', data.device_token)
+      localStorage.setItem('client_phone', phone)
+
+      setState({
+        user: data.user,
+        token: data.access_token,
+        userRole: data.user.role,
+        barbershop: data.barbershop,
+        loading: false,
+      })
+
+      return { success: true, message: 'Verificação realizada com sucesso!' }
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || 'Código inválido ou expirado'
+      return { success: false, message }
+    }
+  }
+
+  const autoLogin = async (): Promise<{ success: boolean; message: string }> => {
+    const deviceToken = localStorage.getItem('device_token')
+    const phone = localStorage.getItem('client_phone')
+
+    if (!deviceToken || !phone) {
+      return { success: false, message: 'Nenhum dispositivo registrado' }
+    }
+
+    try {
+      const response = await axios.post<
+        ApiResponse<{ user: User; barbershop: BarberShop; access_token: string }>
+      >(`${API_URL}/auth/client/auto-login`, {
+        device_token: deviceToken,
+        phone,
+      })
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Sessão expirada')
+      }
+
+      const { data } = response.data
+
+      localStorage.setItem('auth_token', data.access_token)
+      localStorage.setItem('user_role', data.user.role)
+
+      setState({
+        user: data.user,
+        token: data.access_token,
+        userRole: data.user.role,
+        barbershop: data.barbershop,
+        loading: false,
+      })
+
+      return { success: true, message: 'Login automático realizado!' }
+    } catch (error: any) {
+      // Limpar device token inválido
+      localStorage.removeItem('device_token')
+      localStorage.removeItem('client_phone')
+      return { success: false, message: 'Sessão expirada. Faça login novamente.' }
+    }
+  }
+
   const value: AuthContextType = {
     ...state,
     refreshAuth: loadAuthData,
@@ -206,6 +358,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signUp,
     signOut,
+    requestOtp,
+    verifyOtp,
+    autoLogin,
     isAuthenticated: !!state.token && !!state.user,
   }
 

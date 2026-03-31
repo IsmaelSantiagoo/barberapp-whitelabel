@@ -3,7 +3,8 @@ import type { NotificationType } from '@/hooks/use-echo'
 export interface User {
   id: number
   name: string
-  email: string
+  email: string | null
+  phone: string | null
   profile_photo: string | null
   role: string
   first_access: number

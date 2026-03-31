@@ -9,6 +9,7 @@ export const schema = (registering: boolean) =>
       primary_color: z.string().optional(),
       owner_name: z.string().optional(), // obrigatório apenas no registro
       email: z.string().min(1, 'O email é obrigatório'),
+      telefone: z.string().optional(),
       password: z.string().min(1, 'A senha é obrigatória'),
     })
     .refine(
@@ -49,6 +50,13 @@ export const schema = (registering: boolean) =>
         path: ['primary_color'],
       }
     )
+    .refine((data) => {
+      // apenas valida telefone se estiver registrando
+      if (registering) {
+        return !!data.telefone && data.telefone.trim().length > 0
+      }
+      return true
+    })
 
 export type Schema = z.infer<ReturnType<typeof schema>>
 
@@ -57,5 +65,29 @@ export const defaultValues: Schema = {
   primary_color: '#000000',
   owner_name: '',
   email: '',
+  telefone: '',
   password: '',
 }
+
+// --- Client Auth (Phone + OTP) ---
+
+export const clientPhoneSchema = z.object({
+  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
+  phone: z
+    .string()
+    .min(10, 'O telefone deve ter pelo menos 10 dígitos')
+    .max(11, 'O telefone deve ter no máximo 11 dígitos'),
+})
+
+export type ClientPhoneSchema = z.infer<typeof clientPhoneSchema>
+
+export const clientPhoneDefaults: ClientPhoneSchema = {
+  name: '',
+  phone: '',
+}
+
+export const clientOtpSchema = z.object({
+  code: z.string().length(6, 'O código deve ter 6 dígitos'),
+})
+
+export type ClientOtpSchema = z.infer<typeof clientOtpSchema>

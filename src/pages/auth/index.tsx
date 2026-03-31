@@ -1,7 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building2Icon, EyeIcon, EyeOffIcon, LockIcon, MailIcon, UserIcon } from 'lucide-react'
+import {
+  Building2Icon,
+  EyeIcon,
+  EyeOffIcon,
+  LockIcon,
+  MailIcon,
+  PhoneIcon,
+  UserIcon,
+} from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -20,7 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input, PasswordInput } from '@/components/ui/input'
+import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from '@/hooks/use-theme'
@@ -28,8 +36,16 @@ import axios from '@/lib/axios'
 import NotFound from '@/pages/NotFound'
 import type { ApiResponse } from '@/types/api-response'
 import type { BarberShop } from '@/types/consults'
+import { phoneMask, phoneUnformatter } from '@/utils/formatters'
 
-import { defaultValues, schema, type Schema } from './schemas'
+import {
+  clientPhoneDefaults,
+  clientPhoneSchema,
+  defaultValues,
+  schema,
+  type ClientPhoneSchema,
+  type Schema,
+} from './schemas'
 
 const appMode = import.meta.env.VITE_APP_MODE
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
@@ -44,14 +60,29 @@ export default function AuthPage() {
   const [checkingBarbershop, setCheckingBarbershop] = useState(appMode === 'client')
   const [barbershop, setBarbershop] = useState<BarberShop | null>(null)
 
+  // Client auth state
+  const [clientStep, setClientStep] = useState<'phone' | 'otp'>('phone')
+  const [clientPhone, setClientPhone] = useState('')
+  const [clientName, setClientName] = useState('')
+  const [otpValues, setOtpValues] = useState<string[]>(['', '', '', '', '', ''])
+  const [resendCountdown, setResendCountdown] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([])
+
   const form = useForm<Schema>({
     resolver: zodResolver(schema(params.get('register') === 'true')),
     defaultValues: defaultValues,
     mode: 'onSubmit',
   })
 
+  const clientPhoneForm = useForm<ClientPhoneSchema>({
+    resolver: zodResolver(clientPhoneSchema),
+    defaultValues: clientPhoneDefaults,
+    mode: 'onSubmit',
+  })
+
   const navigate = useNavigate()
-  const { signIn, signUp, loading, setLoading, isAuthenticated } = useAuth()
+  const { signIn, signUp, requestOtp, verifyOtp, loading, setLoading, isAuthenticated } = useAuth()
 
   // Verifica se a barbearia existe (apenas no modo client)
   useEffect(() => {
@@ -96,9 +127,21 @@ export default function AuthPage() {
     checkBarbershop()
   }, [])
 
+  // Countdown para reenvio de OTP
+  useEffect(() => {
+    if (resendCountdown <= 0) return
+    const timer = setTimeout(() => setResendCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [resendCountdown])
+
   // Redirect if already authenticated
   if (isAuthenticated && appMode === 'admin') {
     navigate('/admin/dashboard')
+    return null
+  }
+
+  if (isAuthenticated && appMode === 'client') {
+    navigate('/home')
     return null
   }
 
@@ -152,27 +195,108 @@ export default function AuthPage() {
     setShowPassword(!showPassword)
   }
 
-  interface CustomizedMessage {
-    subtitle: string
-  }
-  const customizedMessages = (): CustomizedMessage => {
-    const registering = params.get('register') === 'true'
+  // --- Client Auth Handlers ---
+  const handleClientPhoneSubmit = async (data: ClientPhoneSchema) => {
+    setSubmitting(true)
+    setClientPhone(data.phone)
+    setClientName(data.name)
 
-    if (registering) {
-      return {
-        subtitle:
-          appMode === 'admin'
-            ? 'Crie sua conta para gerenciar sua barbearia'
-            : 'Cadastre-se para começar a agendar seus horários',
-      }
-    } else {
-      return {
-        subtitle:
-          appMode === 'admin'
-            ? 'Entre na sua conta para gerenciar sua barbearia'
-            : 'Entre na sua conta para começar a agendar',
+    const { success, message } = await requestOtp(data.phone, data.name)
+
+    setSubmitting(false)
+
+    if (!success) {
+      toast.error(message)
+      return
+    }
+
+    toast.success(message)
+    setClientStep('otp')
+    setResendCountdown(60)
+    setOtpValues(['', '', '', '', '', ''])
+
+    // Focus primeiro input OTP após render
+    setTimeout(() => otpInputRefs.current[0]?.focus(), 100)
+  }
+
+  const handleOtpChange = (index: number, value: string) => {
+    // Aceitar apenas dígitos
+    if (value && !/^\d$/.test(value)) return
+
+    const newValues = [...otpValues]
+    newValues[index] = value
+    setOtpValues(newValues)
+
+    // Auto-avançar para o próximo input
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-submit quando todos preenchidos
+    if (value && index === 5) {
+      const code = newValues.join('')
+      if (code.length === 6) {
+        handleVerifyOtp(code)
       }
     }
+  }
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (pasted.length === 0) return
+
+    const newValues = [...otpValues]
+    for (let i = 0; i < 6; i++) {
+      newValues[i] = pasted[i] || ''
+    }
+    setOtpValues(newValues)
+
+    if (pasted.length === 6) {
+      handleVerifyOtp(pasted)
+    } else {
+      otpInputRefs.current[pasted.length]?.focus()
+    }
+  }
+
+  const handleVerifyOtp = async (code: string) => {
+    setSubmitting(true)
+    const { success, message } = await verifyOtp(clientPhone, code)
+    setSubmitting(false)
+
+    if (!success) {
+      toast.error(message)
+      setOtpValues(['', '', '', '', '', ''])
+      otpInputRefs.current[0]?.focus()
+      return
+    }
+
+    toast.success('Bem-vindo!')
+    navigate('/home')
+  }
+
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0) return
+
+    setSubmitting(true)
+    const { success, message } = await requestOtp(clientPhone, clientName)
+    setSubmitting(false)
+
+    if (!success) {
+      toast.error(message)
+      return
+    }
+
+    toast.success('Código reenviado!')
+    setResendCountdown(60)
+    setOtpValues(['', '', '', '', '', ''])
+    otpInputRefs.current[0]?.focus()
   }
 
   if (loading) {
@@ -363,6 +487,7 @@ export default function AuthPage() {
     )
   }
 
+  // --- Client Mode: Phone + OTP ---
   return (
     <div className='flex flex-col h-screen'>
       <div className='h-full flex flex-col justify-between py-10 px-10 gap-3'>
@@ -374,106 +499,158 @@ export default function AuthPage() {
                 {barbershop ? barbershop.company_name : ''}
               </AvatarFallback>
             </Avatar>
-            <h1 className='text-2xl font-bold'>Vamos Começar</h1>
-            <h2 className='text-primary/50'>{customizedMessages().subtitle}</h2>
+            <h1 className='text-2xl font-bold'>
+              {clientStep === 'phone' ? 'Vamos Começar' : 'Verificação'}
+            </h1>
+            <h2 className='text-primary/50 text-center'>
+              {clientStep === 'phone'
+                ? 'Informe seus dados para agendar'
+                : `Enviamos um código para o WhatsApp ${phoneMask(clientPhone)}`}
+            </h2>
           </div>
+
           <div className='h-full'>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
-                {params.get('register') === 'true' && (
+            {clientStep === 'phone' && (
+              <Form {...clientPhoneForm}>
+                <form
+                  onSubmit={clientPhoneForm.handleSubmit(handleClientPhoneSubmit)}
+                  className='space-y-6'
+                >
                   <FormField
-                    control={form.control}
-                    name='owner_name'
+                    control={clientPhoneForm.control}
+                    name='name'
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel required>Nome</FormLabel>
-
                         <FormControl>
-                          <Input {...field} placeholder='Digite seu nome' className='h-12' />
+                          <InputGroup>
+                            <InputGroupInput
+                              {...field}
+                              placeholder='Digite seu nome'
+                              className='h-12'
+                            />
+                            <InputGroupAddon>
+                              <UserIcon />
+                            </InputGroupAddon>
+                          </InputGroup>
                         </FormControl>
-
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                )}
-                <FormField
-                  control={form.control}
-                  name='email'
-                  render={(renderData) => {
-                    const { ref: _ref, ...field } = renderData.field
 
-                    return (
+                  <FormField
+                    control={clientPhoneForm.control}
+                    name='phone'
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel required>Email</FormLabel>
-
+                        <FormLabel required>Telefone</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            type='email'
-                            placeholder='email@example.com'
-                            className='h-12'
-                          />
+                          <InputGroup>
+                            <InputGroupInput
+                              placeholder='(00) 00000-0000'
+                              value={phoneMask(field.value || '')}
+                              onChange={(e) => {
+                                const unformatted = phoneUnformatter(e.target.value)
+                                if (unformatted.length <= 11) {
+                                  field.onChange(unformatted)
+                                }
+                              }}
+                              inputMode='tel'
+                            />
+                            <InputGroupAddon>
+                              <PhoneIcon />
+                            </InputGroupAddon>
+                          </InputGroup>
                         </FormControl>
-
                         <FormMessage />
                       </FormItem>
-                    )
-                  }}
-                />
-                <FormField
-                  control={form.control}
-                  name='password'
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className='flex justify-between'>
-                        <FormLabel required>Senha</FormLabel>
+                    )}
+                  />
 
-                        <span className='text-sm text-primary/50'>
-                          {params.get('register') !== 'true' && (
-                            <a href='/forgot-password'>Esqueceu sua senha?</a>
-                          )}
-                        </span>
-                      </div>
+                  <Field>
+                    <Button
+                      className='h-12 cursor-pointer border'
+                      type='submit'
+                      disabled={submitting}
+                      style={{
+                        backgroundColor: tokens.primary,
+                        borderColor: tokens.border,
+                        color: tokens.onPrimary,
+                      }}
+                    >
+                      {submitting ? 'Enviando código no WhatsApp...' : 'Agendar agora'}
+                    </Button>
+                  </Field>
+                </form>
+              </Form>
+            )}
 
-                      <FormControl>
-                        <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
-                      </FormControl>
-
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {clientStep === 'otp' && (
+              <div className='space-y-6'>
+                <div className='flex justify-center gap-2'>
+                  {otpValues.map((val, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        otpInputRefs.current[i] = el
+                      }}
+                      type='text'
+                      inputMode='numeric'
+                      maxLength={1}
+                      value={val}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      onPaste={i === 0 ? handleOtpPaste : undefined}
+                      className='w-12 h-14 text-center text-xl font-bold rounded-md border border-input bg-transparent shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
+                      disabled={submitting}
+                    />
+                  ))}
+                </div>
 
                 <Field>
                   <Button
                     className='h-12 cursor-pointer border'
-                    type='submit'
+                    type='button'
+                    disabled={submitting || otpValues.join('').length < 6}
+                    onClick={() => handleVerifyOtp(otpValues.join(''))}
                     style={{
                       backgroundColor: tokens.primary,
                       borderColor: tokens.border,
                       color: tokens.onPrimary,
                     }}
                   >
-                    {params.get('register') === 'true' ? 'Cadastrar' : 'Entrar'}
+                    {submitting ? 'Verificando...' : 'Verificar'}
                   </Button>
-                  <Button className='h-12 cursor-pointer' variant='outline' type='button'>
-                    <GoogleLogo className='mr-2' />
-                    {params.get('register') === 'true'
-                      ? 'Cadastrar com Google'
-                      : 'Entrar com Google'}
-                  </Button>
-                  <FieldDescription className='text-center'>
-                    {params.get('register') === 'true'
-                      ? 'Já possui uma conta? '
-                      : 'Não possui uma conta? '}
-                    <a href={params.get('register') === 'true' ? '?' : '?register=true'}>
-                      {params.get('register') === 'true' ? 'Faça login' : 'Cadastre-se'}
-                    </a>
-                  </FieldDescription>
                 </Field>
-              </form>
-            </Form>
+
+                <div className='text-center space-y-2'>
+                  <button
+                    type='button'
+                    className='text-sm text-primary/70 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed'
+                    disabled={resendCountdown > 0 || submitting}
+                    onClick={handleResendOtp}
+                  >
+                    {resendCountdown > 0
+                      ? `Reenviar código em ${resendCountdown}s`
+                      : 'Reenviar código'}
+                  </button>
+
+                  <div>
+                    <button
+                      type='button'
+                      className='text-sm text-primary/50 hover:text-primary'
+                      onClick={() => {
+                        setClientStep('phone')
+                        setOtpValues(['', '', '', '', '', ''])
+                      }}
+                    >
+                      Alterar número
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
