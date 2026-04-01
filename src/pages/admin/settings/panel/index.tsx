@@ -18,20 +18,31 @@ interface PanelSettings {
   receiveNotifications: boolean
 }
 
-const defaultSettings: PanelSettings = {
-  theme: 'light',
-  notificationSound: true,
-  receiveNotifications: true,
+function getCurrentTheme(): 'light' | 'dark' {
+  const themeProviderValue = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null
+  if (themeProviderValue === 'light' || themeProviderValue === 'dark') return themeProviderValue
+  return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
 }
 
 function loadSettings(): PanelSettings {
   try {
     const stored = localStorage.getItem(SETTINGS_KEY)
-    if (stored) return { ...defaultSettings, ...JSON.parse(stored) }
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return {
+        theme: parsed.theme ?? getCurrentTheme(),
+        notificationSound: parsed.notificationSound ?? true,
+        receiveNotifications: parsed.receiveNotifications ?? true,
+      }
+    }
   } catch {
     // Ignore parsing errors and return default settings
   }
-  return defaultSettings
+  return {
+    theme: getCurrentTheme(),
+    notificationSound: true,
+    receiveNotifications: true,
+  }
 }
 
 export default function AdminPanelSettings() {
