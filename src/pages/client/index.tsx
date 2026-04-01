@@ -1,6 +1,7 @@
 import { CalendarIcon, ClipboardListIcon, InfoIcon, ScissorsIcon } from 'lucide-react'
 import { useNavigate } from 'react-router'
 
+import { PwaInstallButton } from '@/components/custom/pwa-install-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
@@ -52,6 +53,7 @@ export default function ClientHome() {
           <InfoIcon />
           <span className='text-lg'>Informações da Barbearia</span>
         </Button>
+        <PwaInstallButton />
       </div>
 
       <footer className='p-4 text-center text-xs text-muted-foreground dark:bg-black'>

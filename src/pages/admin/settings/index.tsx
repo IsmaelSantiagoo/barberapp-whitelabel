@@ -46,7 +46,7 @@ export default function AdminSettings() {
   const [logoError, setLogoError] = useState(false)
   const [appLinkCopied, setAppLinkCopied] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
   // ==================== Utils ====================
   const formatPhoneDisplay = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '')
