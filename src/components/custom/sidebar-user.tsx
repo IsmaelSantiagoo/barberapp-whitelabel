@@ -38,7 +38,7 @@ export function SidebarUser() {
               <CustomAvatar
                 src={user?.profile_photo ?? undefined}
                 alt={user?.name || undefined}
-                className='h-10 w-10 grayscale'
+                className='h-10 w-10'
               />
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 {loading ? (
@@ -66,7 +66,7 @@ export function SidebarUser() {
                 <CustomAvatar
                   src={user?.profile_photo ?? undefined}
                   alt={user?.name || undefined}
-                  className='h-10 w-10 grayscale'
+                  className='h-10 w-10'
                 />
                 <div className='grid flex-1 text-left text-sm leading-tight'>
                   {loading ? (
