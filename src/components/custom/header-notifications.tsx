@@ -15,16 +15,59 @@ import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
 import { type Notification } from '@/types/consults'
 
+const SETTINGS_KEY = 'admin_panel_settings'
+
+interface PanelSettings {
+  notificationSound: boolean
+  receiveNotifications: boolean
+}
+
+function loadPanelSettings(): PanelSettings {
+  try {
+    const stored = localStorage.getItem(SETTINGS_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return {
+        notificationSound: parsed.notificationSound ?? true,
+        receiveNotifications: parsed.receiveNotifications ?? true,
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { notificationSound: true, receiveNotifications: true }
+}
+
 const HeaderNotifications = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const notificationSound = useRef<HTMLAudioElement | null>(null)
   const lastPlayTimeRef = useRef<number>(0)
+  const settingsRef = useRef<PanelSettings>(loadPanelSettings())
 
   // dados do usuário
   const { user } = useAuth()
 
   // Prevenir múltiplas reproduções em um curto período de tempo
   const PLAY_DEBOUNCE_MS = 500
+
+  // Sincronizar settings quando localStorage muda (ex: outra aba ou a própria settings page)
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === SETTINGS_KEY) settingsRef.current = loadPanelSettings()
+    }
+    window.addEventListener('storage', onStorage)
+
+    // Também re-ler ao focar a janela (mesma aba)
+    const onFocus = () => {
+      settingsRef.current = loadPanelSettings()
+    }
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [])
 
   // Inicializar o som apenas uma vez usando HTMLAudioElement
   useEffect(() => {
@@ -122,37 +165,43 @@ const HeaderNotifications = () => {
   }, [open])
 
   useEffect(() => {
-    if (messages.length > 0 && notificationSound.current) {
-      console.log('[HeaderNotifications] Mensagens recebidas:', messages)
+    if (messages.length > 0) {
+      // Re-ler settings a cada batch de mensagens (garante valor atualizado)
+      settingsRef.current = loadPanelSettings()
+      const { receiveNotifications, notificationSound: soundEnabled } = settingsRef.current
+
+      // Se notificações estão desligadas, descarta as mensagens silenciosamente
+      if (!receiveNotifications) {
+        clearMessages()
+        return
+      }
 
       setNotifications((prev) => {
         return [
           ...prev,
-          ...messages.map((message) => {
-            console.log('[HeaderNotifications] Processando mensagem:', message)
-            return {
-              id: message.id,
-              title: message.title,
-              message: message.message,
-              type: message.type,
-              link: message.link,
-              sent_at: message.sent_at,
-              read: message.read,
-            }
-          }),
+          ...messages.map((message) => ({
+            id: message.id,
+            title: message.title,
+            message: message.message,
+            type: message.type,
+            link: message.link,
+            sent_at: message.sent_at,
+            read: message.read,
+          })),
         ]
       })
 
-      // Reproduzir som com debounce para evitar pool exhausted
-      const now = Date.now()
-      if (notificationSound.current && now - lastPlayTimeRef.current > PLAY_DEBOUNCE_MS) {
-        try {
-          // Reinicia o áudio se já estiver tocando
-          notificationSound.current.currentTime = 0
-          notificationSound.current.play()
-          lastPlayTimeRef.current = now
-        } catch (error) {
-          console.error('Erro ao tocar notificação:', error)
+      // Reproduzir som somente se habilitado nas configurações
+      if (soundEnabled && notificationSound.current) {
+        const now = Date.now()
+        if (now - lastPlayTimeRef.current > PLAY_DEBOUNCE_MS) {
+          try {
+            notificationSound.current.currentTime = 0
+            notificationSound.current.play()
+            lastPlayTimeRef.current = now
+          } catch (error) {
+            console.error('Erro ao tocar notificação:', error)
+          }
         }
       }
 
