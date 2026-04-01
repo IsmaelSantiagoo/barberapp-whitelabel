@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronLeftIcon, SaveIcon, UserIcon } from 'lucide-react'
+import {
+  CameraIcon,
+  ChevronLeftIcon,
+  Loader2Icon,
+  SaveIcon,
+  Trash2Icon,
+  UserIcon,
+} from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -42,14 +50,61 @@ import {
 export default function AdminAccountSettings() {
   // ==================== Hooks ====================
   const { user, loading, refreshAuth } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ==================== States ====================
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [removingPhoto, setRemovingPhoto] = useState(false)
   const [spinners, setSpinners] = useState({
     submitting: {
       email: false,
       password: false,
     },
   })
+
+  // ==================== Foto de Perfil ====================
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('image', file)
+
+    setUploadingPhoto(true)
+    try {
+      const response = await axios.post<ApiResponse>(`/users/change-photo/${user?.id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      if (response.data.success) {
+        toast.success(response.data.message || 'Foto atualizada com sucesso!')
+        refreshAuth()
+      } else {
+        toast.error(response.data.message || 'Erro ao atualizar a foto.')
+      }
+    } catch (error: any) {
+      toast.error(`Erro ao atualizar foto: ${error.message}`)
+    } finally {
+      setUploadingPhoto(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handlePhotoRemove = async () => {
+    setRemovingPhoto(true)
+    try {
+      const response = await axios.delete<ApiResponse>(`/users/remove-photo/${user?.id}`)
+      if (response.data.success) {
+        toast.success(response.data.message || 'Foto removida com sucesso!')
+        refreshAuth()
+      } else {
+        toast.error(response.data.message || 'Erro ao remover a foto.')
+      }
+    } catch (error: any) {
+      toast.error(`Erro ao remover foto: ${error.message}`)
+    } finally {
+      setRemovingPhoto(false)
+    }
+  }
 
   // ==================== Formulário ====================
   const emailForm = useForm<EmailSchema>({
@@ -114,6 +169,12 @@ export default function AdminAccountSettings() {
 
   // setando erros no formulário de acordo com as validações
   useEffect(() => {
+    // só validar quando o usuário começou a digitar a nova senha
+    if (!senha_nova && !confirmar_senha_nova) {
+      passwordForm.clearErrors()
+      return
+    }
+
     if (
       password_validations(senha_antiga, senha_nova, confirmar_senha_nova).every(
         (v) => v.validation
@@ -167,6 +228,61 @@ export default function AdminAccountSettings() {
         <h1 className='text-2xl font-bold hidden lg:block'>Minha Conta</h1>
         <p className='text-muted-foreground'>Gerencie suas informações de acesso</p>
       </div>
+
+      {/* Foto de Perfil */}
+      <Card>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2'>
+            <CameraIcon className='h-5 w-5' />
+            Foto de Perfil
+          </CardTitle>
+          <CardDescription>Atualize sua foto de perfil</CardDescription>
+        </CardHeader>
+        <CardContent className='flex items-center gap-6'>
+          <Avatar className='w-14 h-14'>
+            <AvatarImage src={user?.profile_photo ?? undefined} alt={user?.name || undefined} />
+            <AvatarFallback>{user?.name}</AvatarFallback>
+          </Avatar>
+          <div className='flex flex-col gap-2'>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='image/*'
+              className='hidden'
+              onChange={handlePhotoUpload}
+            />
+            <div className='flex gap-2'>
+              <Button
+                size='sm'
+                variant='outline'
+                disabled={uploadingPhoto}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploadingPhoto ? (
+                  <Loader2Icon className='mr-2 h-4 w-4 animate-spin' />
+                ) : (
+                  <CameraIcon className='mr-2 h-4 w-4' />
+                )}
+                {uploadingPhoto ? 'Enviando...' : 'Alterar Foto'}
+              </Button>
+              <Button
+                size='sm'
+                color='destructive'
+                disabled={removingPhoto}
+                onClick={handlePhotoRemove}
+              >
+                {removingPhoto ? (
+                  <Loader2Icon className='mr-2 h-4 w-4 animate-spin' />
+                ) : (
+                  <Trash2Icon className='mr-2 h-4 w-4' />
+                )}
+                {removingPhoto ? 'Removendo...' : 'Remover'}
+              </Button>
+            </div>
+            <p className='text-xs text-muted-foreground'>JPG, PNG ou GIF. Tamanho máximo de 2MB.</p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Email */}
       <Card>

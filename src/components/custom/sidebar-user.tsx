@@ -1,5 +1,6 @@
 import { Skeleton } from '../ui/skeleton'
 import { CircleUserRoundIcon, EllipsisVerticalIcon, LogOutIcon } from 'lucide-react'
+import { useNavigate } from 'react-router'
 
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ import { CustomAvatar } from './avatar'
 export function SidebarUser() {
   const { isMobile } = useSidebar()
   const { user, signOut, loading } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <SidebarMenu>
@@ -82,7 +84,7 @@ export function SidebarUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/admin/settings/account')}>
                 <CircleUserRoundIcon />
                 Conta
               </DropdownMenuItem>
