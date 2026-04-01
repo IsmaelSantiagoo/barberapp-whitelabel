@@ -253,10 +253,6 @@ export default function AdminSettings() {
             )}
           </div>
         </div>
-
-        <p className='text-yellow-400 text-sm'>
-          *As alterações podem levar alguns minutos para serem refletidas no aplicativo.
-        </p>
       </div>
 
       <Form {...form}>
