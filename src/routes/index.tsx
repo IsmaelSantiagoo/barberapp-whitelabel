@@ -1,52 +1,51 @@
-import AppLayout from '../pages/layout'
+import AdminLayout from '../pages/layout/admin-layout'
+import ClientLayout from '../pages/layout/client-layout'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
-import { detectAppMode } from '@/lib/detectAppMode'
+import { getRedirectPathByRole } from '@/lib/detectAppMode'
 
 import { AdminRoutesChildren } from './admin'
 import { AuthRoute } from './auth'
 import { ClientRoutesChildren } from './client'
+import { AdminGuard } from './guards'
 
-const appMode = detectAppMode()
-const isAdmin = appMode === 'admin'
-const redirectPath = isAdmin ? '/admin/dashboard' : '/client/home'
+function RootRedirect() {
+  const role = localStorage.getItem('user_role')
+  return <Navigate to={getRedirectPathByRole(role)} replace />
+}
 
 const router = createBrowserRouter([
-  // Auth route (unprotected)
+  // Auth (unprotected)
   AuthRoute,
 
-  // Admin routes - only available if appMode is admin
-  ...(isAdmin
-    ? [
-        {
-          path: '/admin',
-          element: <AppLayout />,
-          children: AdminRoutesChildren,
-        },
-      ]
-    : []),
+  // Admin routes — protected by role guard
+  {
+    path: '/admin',
+    element: (
+      <AdminGuard>
+        <AdminLayout />
+      </AdminGuard>
+    ),
+    children: AdminRoutesChildren,
+  },
 
-  // Client routes - only available if appMode is client
-  ...(!isAdmin
-    ? [
-        {
-          path: '/client',
-          element: <AppLayout />,
-          children: ClientRoutesChildren,
-        },
-      ]
-    : []),
+  // Client routes — accessible to everyone
+  {
+    path: '/client',
+    element: <ClientLayout />,
+    children: ClientRoutesChildren,
+  },
 
-  // Root redirect
+  // Root redirect based on stored role
   {
     path: '/',
-    element: <Navigate to={redirectPath} replace />,
+    element: <RootRedirect />,
   },
 
   // Catch-all
   {
     path: '*',
-    element: <Navigate to={redirectPath} replace />,
+    element: <RootRedirect />,
   },
 ])
 

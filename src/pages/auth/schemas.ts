@@ -1,8 +1,6 @@
 import { z } from 'zod'
 
-import { detectAppMode } from '@/lib/detectAppMode'
-
-const appMode = import.meta.env.VITE_APP_MODE || detectAppMode()
+import { isClientContext } from '@/lib/detectAppMode'
 
 export const schema = (registering: boolean) =>
   z
@@ -28,8 +26,8 @@ export const schema = (registering: boolean) =>
     )
     .refine(
       (data) => {
-        // Apenas valida company_name se for appMode admin
-        if (registering && appMode === 'admin') {
+        // Apenas valida company_name se for contexto admin (sem barbershop_id)
+        if (registering && !isClientContext()) {
           return !!data.company_name && data.company_name.trim().length > 0
         }
         return true
@@ -41,8 +39,8 @@ export const schema = (registering: boolean) =>
     )
     .refine(
       (data) => {
-        // Apenas valida primary_color se for appMode admin
-        if (registering && appMode === 'admin') {
+        // Apenas valida primary_color se for contexto admin (sem barbershop_id)
+        if (registering && !isClientContext()) {
           return !!data.primary_color && data.primary_color.trim().length > 0
         }
         return true

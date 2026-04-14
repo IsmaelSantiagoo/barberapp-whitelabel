@@ -1,11 +1,9 @@
 import vanillaAxios, { type AxiosRequestHeaders } from 'axios'
 import { toast } from 'sonner'
 
-import { detectAppMode } from './detectAppMode'
+import { detectAppMode, getBarbershopId } from './detectAppMode'
 
-const appMode = import.meta.env.VITE_APP_MODE || detectAppMode()
 const apiBaseUrl = import.meta.env.VITE_API_URL
-const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 
 if (!apiBaseUrl) throw new Error('VITE_API_URL is not defined')
 
@@ -20,8 +18,10 @@ const axios = vanillaAxios.create({
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
+  // Detecta a área atual pela URL no momento da request
+  const currentMode = detectAppMode()
   const barbershopId =
-    appMode === 'client' ? localBarbershopId : sessionStorage.getItem('active_barbershop_id')
+    currentMode === 'client' ? getBarbershopId() : sessionStorage.getItem('active_barbershop_id')
 
   config.headers = config.headers || ({} as AxiosRequestHeaders)
 

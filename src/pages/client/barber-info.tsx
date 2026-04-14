@@ -31,7 +31,7 @@ export default function ClientInfoBarbershop() {
       {/* Header */}
       <header className='border-b p-4'>
         <div className='flex items-center gap-4'>
-          <Button variant='ghost' size='icon' onClick={() => navigate(`/home`)}>
+          <Button variant='ghost' size='icon' onClick={() => navigate(`/client/home`)}>
             <ArrowLeft className='h-5 w-5' />
           </Button>
           <h1 className='font-semibold'>Informações</h1>

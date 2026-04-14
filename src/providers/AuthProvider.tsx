@@ -3,7 +3,7 @@ import { createContext, useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 
 import axios from '@/lib/axios'
-import detectAppMode from '@/lib/detectAppMode'
+import { isClientContext } from '@/lib/detectAppMode'
 import type { Schema } from '@/pages/auth/schemas'
 import { type ApiResponse } from '@/types/api-response'
 import { type BarberShop, type User } from '@/types/consults'
@@ -19,8 +19,11 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   setLoading: (loading: boolean) => void
   refreshAuth: () => Promise<void>
-  signIn: (email: string, password: string) => Promise<{ success: boolean; message: string }>
-  signUp: (signUpData: Schema) => Promise<{ success: boolean; message: string }>
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string; userRole?: string }>
+  signUp: (signUpData: Schema) => Promise<{ success: boolean; message: string; userRole?: string }>
   signOut: () => Promise<void>
   requestOtp: (phone: string, name: string) => Promise<{ success: boolean; message: string }>
   verifyOtp: (phone: string, code: string) => Promise<{ success: boolean; message: string }>
@@ -30,7 +33,6 @@ interface AuthContextType extends AuthState {
 
 export const AuthContext = createContext<AuthContextType | null>(null)
 
-const appMode = detectAppMode()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 interface AuthProviderProps {
@@ -54,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const token = localStorage.getItem('auth_token')
 
     // No modo client, tentar auto-login via device_token se não tiver auth_token
-    if (!token && appMode === 'client') {
+    if (!token && isClientContext()) {
       const deviceToken = localStorage.getItem('device_token')
       const phone = localStorage.getItem('client_phone')
 
@@ -153,14 +155,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async (
     email: string,
     password: string
-  ): Promise<{ success: boolean; message: string }> => {
+  ): Promise<{ success: boolean; message: string; userRole?: string }> => {
     try {
       const response = await axios.post<
         ApiResponse<{ user: User; barbershop: BarberShop; access_token: string }>
       >(`${API_URL}/auth/login`, {
         email,
         password,
-        appMode,
+        appMode: isClientContext() ? 'client' : 'admin',
       })
 
       const { data, message } = response.data
@@ -180,7 +182,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loading: false,
       })
 
-      return { success: true, message: 'Login realizado com sucesso!' }
+      return { success: true, message: 'Login realizado com sucesso!', userRole: data.user.role }
     } catch (error: any) {
       console.error('Erro ao fazer login:', error)
       return { success: false, message: error.message }
@@ -206,9 +208,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  const signUp = async (signUpData: Schema): Promise<{ success: boolean; message: string }> => {
+  const signUp = async (
+    signUpData: Schema
+  ): Promise<{ success: boolean; message: string; userRole?: string }> => {
     try {
-      if (appMode !== 'client') {
+      if (!isClientContext()) {
         const response = await axios.post<ApiResponse>(`${API_URL}/register-barbershop`, {
           company_name: signUpData.company_name,
           owner_name: signUpData.owner_name,

@@ -204,7 +204,7 @@ export default function ClientSchedule() {
             variant='ghost'
             size='icon'
             onClick={() => {
-              if (step === 'service') navigate('/home')
+              if (step === 'service') navigate('/client/home')
               else if (step === 'date') setStep('service')
               else if (step === 'time') setStep('date')
               else if (step === 'confirm') setStep('time')

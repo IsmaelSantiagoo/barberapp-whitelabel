@@ -34,7 +34,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from '@/hooks/use-theme'
 import axios from '@/lib/axios'
-import { detectAppMode } from '@/lib/detectAppMode'
+import { getBarbershopId, getRedirectPathByRole, isClientContext } from '@/lib/detectAppMode'
 import NotFound from '@/pages/NotFound'
 import type { ApiResponse } from '@/types/api-response'
 import type { BarberShop } from '@/types/consults'
@@ -49,17 +49,17 @@ import {
   type Schema,
 } from './schemas'
 
-const appMode = import.meta.env.VITE_APP_MODE || detectAppMode()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 
 export default function AuthPage() {
   const { tokens } = useTheme()
+  const isClient = isClientContext()
+  const barbershopId = getBarbershopId()
 
   const params = new URLSearchParams(window.location.search)
   const [showPassword, setShowPassword] = useState(false)
   const [barbershopExists, setBarbershopExists] = useState<boolean | null>(null)
-  const [checkingBarbershop, setCheckingBarbershop] = useState(appMode === 'client')
+  const [checkingBarbershop, setCheckingBarbershop] = useState(isClient)
   const [barbershop, setBarbershop] = useState<BarberShop | null>(null)
 
   // Client auth state
@@ -89,7 +89,7 @@ export default function AuthPage() {
   // Verifica se a barbearia existe (apenas no modo client)
   useEffect(() => {
     const checkBarbershop = async () => {
-      if (appMode !== 'client' || !localBarbershopId) {
+      if (!isClient || !barbershopId) {
         setCheckingBarbershop(false)
         setBarbershopExists(true)
         return
@@ -97,7 +97,7 @@ export default function AuthPage() {
 
       try {
         const response = await axios.get<ApiResponse<BarberShop>>(
-          `${API_URL}/barber-shops/${localBarbershopId}`
+          `${API_URL}/barber-shops/${barbershopId}`
         )
 
         if (response.data.success && response.data.data) {
@@ -136,14 +136,10 @@ export default function AuthPage() {
     return () => clearTimeout(timer)
   }, [resendCountdown])
 
-  // Redirect if already authenticated
-  if (isAuthenticated && appMode === 'admin') {
-    navigate('/admin/dashboard')
-    return null
-  }
-
-  if (isAuthenticated && appMode === 'client') {
-    navigate('/home')
+  // Redirect if already authenticated — baseado no role do usuário
+  if (isAuthenticated) {
+    const storedRole = localStorage.getItem('user_role')
+    navigate(getRedirectPathByRole(storedRole))
     return null
   }
 
@@ -157,7 +153,7 @@ export default function AuthPage() {
   }
 
   // Se barbearia não existe (apenas no modo client)
-  if (appMode === 'client' && barbershopExists === false) {
+  if (isClient && barbershopExists === false) {
     return <NotFound />
   }
 
@@ -165,14 +161,15 @@ export default function AuthPage() {
     setSubmitting(true)
     if (params.get('register') === 'true') {
       try {
-        const { success, message } = await signUp(data)
+        const { success, message, userRole } = await signUp(data)
 
         if (!success) {
           toast.error(message)
           return
         }
 
-        navigate('/admin/dashboard')
+        const redirectPath = getRedirectPathByRole(userRole)
+        navigate(redirectPath)
       } catch (error) {
         console.error('Register error:', error)
         toast.error('Não foi possível fazer registro. Tente novamente.')
@@ -181,14 +178,15 @@ export default function AuthPage() {
       }
     } else {
       try {
-        const { success, message } = await signIn(data.email, data.password)
+        const { success, message, userRole } = await signIn(data.email, data.password)
 
         if (!success) {
           toast.error(message)
           return
         }
 
-        navigate('/admin/dashboard')
+        const redirectPath = getRedirectPathByRole(userRole)
+        navigate(redirectPath)
       } catch (error) {
         console.error('Login error:', error)
         toast.error('Não foi possível fazer login. Tente novamente.')
@@ -285,7 +283,7 @@ export default function AuthPage() {
     }
 
     toast.success('Bem-vindo!')
-    navigate('/home')
+    navigate('/client/home')
   }
 
   const handleResendOtp = async () => {
@@ -314,7 +312,7 @@ export default function AuthPage() {
     )
   }
 
-  if (appMode === 'admin') {
+  if (!isClient) {
     return (
       <div className='flex flex-col h-screen items-center justify-center'>
         <Card className='w-full max-w-sm'>

@@ -217,13 +217,12 @@ export default function AdminSettings() {
 
   // ==================== Copiar Link do App ====================
   const handleCopyAppLink = () => {
-    const appLink = form.getValues('app_link')
-    if (appLink) {
-      navigator.clipboard.writeText(appLink)
-      setAppLinkCopied(true)
-      toast.success('Link do app copiado para a área de transferência!')
-      setTimeout(() => setAppLinkCopied(false), 2000)
-    }
+    if (!barbershop?.id) return
+    const appLink = `${window.location.origin}/auth/login?barbershop_id=${barbershop.id}`
+    navigator.clipboard.writeText(appLink)
+    setAppLinkCopied(true)
+    toast.success('Link do app copiado para a área de transferência!')
+    setTimeout(() => setAppLinkCopied(false), 2000)
   }
 
   if (spinners.page) {
@@ -293,7 +292,11 @@ export default function AdminSettings() {
                   type='url'
                   className='font-mono'
                   placeholder='https://seu_link_aparecera_aqui.com'
-                  value={form.getValues('app_link')}
+                  value={
+                    barbershop?.id
+                      ? `${window.location.origin}/auth/login?barbershop_id=${barbershop.id}`
+                      : ''
+                  }
                 />
                 <Button type='button' variant='outline' size='icon' onClick={handleCopyAppLink}>
                   {appLinkCopied ? <CheckIcon /> : <CopyIcon />}
