@@ -34,6 +34,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from '@/hooks/use-theme'
 import axios from '@/lib/axios'
+import { detectAppMode } from '@/lib/detectAppMode'
 import NotFound from '@/pages/NotFound'
 import type { ApiResponse } from '@/types/api-response'
 import type { BarberShop } from '@/types/consults'
@@ -48,7 +49,7 @@ import {
   type Schema,
 } from './schemas'
 
-const appMode = import.meta.env.VITE_APP_MODE
+const appMode = import.meta.env.VITE_APP_MODE || detectAppMode()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 

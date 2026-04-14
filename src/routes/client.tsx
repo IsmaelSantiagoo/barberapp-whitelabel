@@ -6,31 +6,33 @@ import ClientMyAppointments from '@/pages/client/my-schedules'
 import ClientSchedule from '@/pages/client/schedule'
 
 export const ClientRoutes: RouteObject = {
-  path: '',
-  children: [
-    {
-      path: '',
-      element: <Navigate to='/home' replace />,
-    },
-    {
-      path: 'home',
-      element: <ClientHome />,
-    },
-    {
-      path: 'schedule',
-      element: <ClientSchedule />,
-    },
-    {
-      path: 'my-schedules',
-      element: <ClientMyAppointments />,
-    },
-    {
-      path: 'barber-info',
-      element: <ClientInfoBarbershop />,
-    },
-    {
-      path: '*',
-      element: <Navigate to='/home' replace />,
-    },
-  ],
+  index: true,
+  element: <Navigate to='home' replace />,
 }
+
+export const ClientRoutesChildren: RouteObject[] = [
+  {
+    index: true,
+    element: <Navigate to='home' replace />,
+  },
+  {
+    path: 'home',
+    element: <ClientHome />,
+  },
+  {
+    path: 'schedule',
+    element: <ClientSchedule />,
+  },
+  {
+    path: 'my-schedules',
+    element: <ClientMyAppointments />,
+  },
+  {
+    path: 'barber-info',
+    element: <ClientInfoBarbershop />,
+  },
+  {
+    path: '*',
+    element: <Navigate to='home' replace />,
+  },
+]

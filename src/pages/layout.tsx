@@ -7,9 +7,10 @@ import { AppSidebar } from '@/components/custom/app-sidebar'
 import Loader from '@/components/custom/loader'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
+import { detectAppMode } from '@/lib/detectAppMode'
 import { HeaderProvider } from '@/providers/HeaderProvider'
 
-const appMode = import.meta.env.VITE_APP_MODE
+const appMode = detectAppMode()
 
 export default function AppLayout() {
   const navigate = useNavigate()

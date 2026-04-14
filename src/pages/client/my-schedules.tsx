@@ -122,7 +122,7 @@ export default function MyAppointments() {
               <p className='text-muted-foreground mb-6'>Você ainda não tem agendamentos futuros</p>
               <Button
                 className='border'
-                onClick={() => navigate(`/agendar`)}
+                onClick={() => navigate('/client/schedule')}
                 style={{
                   backgroundColor: tokens.primary,
                   color: tokens.onPrimary,

@@ -1,7 +1,9 @@
 import vanillaAxios, { type AxiosRequestHeaders } from 'axios'
 import { toast } from 'sonner'
 
-const appMode = import.meta.env.VITE_APP_MODE
+import { detectAppMode } from './detectAppMode'
+
+const appMode = import.meta.env.VITE_APP_MODE || detectAppMode()
 const apiBaseUrl = import.meta.env.VITE_API_URL
 const localBarbershopId = import.meta.env.VITE_BARBERSHOP_ID
 

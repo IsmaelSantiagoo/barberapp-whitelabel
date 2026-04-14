@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
-const appMode = import.meta.env.VITE_APP_MODE
+import { detectAppMode } from '@/lib/detectAppMode'
+
+const appMode = import.meta.env.VITE_APP_MODE || detectAppMode()
 
 export const schema = (registering: boolean) =>
   z

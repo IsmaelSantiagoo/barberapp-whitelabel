@@ -3,6 +3,7 @@ import { createContext, useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 
 import axios from '@/lib/axios'
+import detectAppMode from '@/lib/detectAppMode'
 import type { Schema } from '@/pages/auth/schemas'
 import { type ApiResponse } from '@/types/api-response'
 import { type BarberShop, type User } from '@/types/consults'
@@ -29,7 +30,7 @@ interface AuthContextType extends AuthState {
 
 export const AuthContext = createContext<AuthContextType | null>(null)
 
-const appMode = import.meta.env.VITE_APP_MODE
+const appMode = detectAppMode()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 interface AuthProviderProps {
@@ -343,7 +344,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
 
       return { success: true, message: 'Login automático realizado!' }
-    } catch (error: any) {
+    } catch {
       // Limpar device token inválido
       localStorage.removeItem('device_token')
       localStorage.removeItem('client_phone')

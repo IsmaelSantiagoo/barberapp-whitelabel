@@ -1,34 +1,52 @@
 import AppLayout from '../pages/layout'
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 
-import { AdminRoutes } from './admin'
+import { detectAppMode } from '@/lib/detectAppMode'
+
+import { AdminRoutesChildren } from './admin'
 import { AuthRoute } from './auth'
-import { ClientRoutes } from './client'
+import { ClientRoutesChildren } from './client'
 
-const appMode = import.meta.env.VITE_APP_MODE
-const unprotectedRoutes: RouteObject[] = [AuthRoute]
-
-const protectedRoutes: RouteObject[] = [appMode === 'admin' ? AdminRoutes : ClientRoutes]
+const appMode = detectAppMode()
+const isAdmin = appMode === 'admin'
+const redirectPath = isAdmin ? '/admin/dashboard' : '/client/home'
 
 const router = createBrowserRouter([
-  ...unprotectedRoutes,
+  // Auth route (unprotected)
+  AuthRoute,
+
+  // Admin routes - only available if appMode is admin
+  ...(isAdmin
+    ? [
+        {
+          path: '/admin',
+          element: <AppLayout />,
+          children: AdminRoutesChildren,
+        },
+      ]
+    : []),
+
+  // Client routes - only available if appMode is client
+  ...(!isAdmin
+    ? [
+        {
+          path: '/client',
+          element: <AppLayout />,
+          children: ClientRoutesChildren,
+        },
+      ]
+    : []),
+
+  // Root redirect
   {
     path: '/',
-    children: [
-      {
-        path: '',
-        element: <Navigate to={appMode === 'admin' ? '/admin/dashboard' : '/home'} replace />,
-      },
-      {
-        path: appMode === 'admin' ? 'admin' : '',
-        element: <AppLayout />,
-        children: [...protectedRoutes],
-      },
-      {
-        path: '*',
-        element: <Navigate to={appMode === 'admin' ? '/admin/dashboard' : '/home'} replace />,
-      },
-    ],
+    element: <Navigate to={redirectPath} replace />,
+  },
+
+  // Catch-all
+  {
+    path: '*',
+    element: <Navigate to={redirectPath} replace />,
   },
 ])
 
