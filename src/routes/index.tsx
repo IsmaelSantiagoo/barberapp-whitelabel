@@ -14,39 +14,44 @@ function RootRedirect() {
   return <Navigate to={getRedirectPathByRole(role)} replace />
 }
 
-const router = createBrowserRouter([
-  // Auth (unprotected)
-  AuthRoute,
+const router = createBrowserRouter(
+  [
+    // Auth (unprotected)
+    AuthRoute,
 
-  // Admin routes — protected by role guard
-  {
-    path: '/admin',
-    element: (
-      <AdminGuard>
-        <AdminLayout />
-      </AdminGuard>
-    ),
-    children: AdminRoutesChildren,
-  },
+    // Admin routes — protected by role guard
+    {
+      path: '/admin',
+      element: (
+        <AdminGuard>
+          <AdminLayout />
+        </AdminGuard>
+      ),
+      children: AdminRoutesChildren,
+    },
 
-  // Client routes — accessible to everyone
-  {
-    path: '/client',
-    element: <ClientLayout />,
-    children: ClientRoutesChildren,
-  },
+    // Client routes — accessible to everyone
+    {
+      path: '/client',
+      element: <ClientLayout />,
+      children: ClientRoutesChildren,
+    },
 
-  // Root redirect based on stored role
-  {
-    path: '/',
-    element: <RootRedirect />,
-  },
+    // Root redirect based on stored role
+    {
+      path: '/',
+      element: <RootRedirect />,
+    },
 
-  // Catch-all
+    // Catch-all
+    {
+      path: '*',
+      element: <RootRedirect />,
+    },
+  ],
   {
-    path: '*',
-    element: <RootRedirect />,
-  },
-])
+    basename: '/agendafy',
+  }
+)
 
 export default router
