@@ -9,9 +9,7 @@ import Notifications from './header-notifications'
 export function AppHeader() {
   const { pageTitle } = useHeader()
   const { barbershop } = useAuth()
-  const logoSrc = barbershop?.logo_url
-    ? `${barbershop.logo_url}${barbershop.logo_url.includes('?') ? '&' : '?'}v=${barbershop.updated_at}`
-    : undefined
+  const logoSrc = barbershop?.logo_url ? barbershop.logo_url : undefined
 
   return (
     <header className='flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)'>

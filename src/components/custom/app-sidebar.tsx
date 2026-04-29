@@ -54,9 +54,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { barbershop, loading } = useAuth()
-  const logoSrc = barbershop?.logo_url
-    ? `${barbershop.logo_url}${barbershop.logo_url.includes('?') ? '&' : '?'}v=${barbershop.updated_at}`
-    : undefined
+  const logoSrc = barbershop?.logo_url ? barbershop.logo_url : undefined
 
   return (
     <Sidebar collapsible='offcanvas' {...props}>
