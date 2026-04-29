@@ -102,4 +102,5 @@ export default defineConfig({
       },
     },
   },
+  base: '/agendafy/',
 })
