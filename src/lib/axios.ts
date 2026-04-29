@@ -61,7 +61,7 @@ axios.interceptors.response.use((response) => {
         sessionStorage.clear()
         localStorage.clear()
 
-        window.location.href = '/auth/login'
+        window.location.href = '/agendafy/auth/login'
       }, 1500)
     }
   }

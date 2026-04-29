@@ -15,7 +15,7 @@ export default function AdminLayout() {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      navigate('/auth/login')
+      navigate('/agendafy/auth/login')
     }
   }, [loading, isAuthenticated, navigate])
 

@@ -25,7 +25,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to='/auth/login' replace />
+    return <Navigate to='/agendafy/auth/login' replace />
   }
 
   const adminRoles = ['admin', 'owner']
