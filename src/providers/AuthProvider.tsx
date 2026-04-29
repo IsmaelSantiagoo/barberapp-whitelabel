@@ -159,7 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const response = await axios.post<
         ApiResponse<{ user: User; barbershop: BarberShop; access_token: string }>
-      >(`${API_URL}/agendafy/auth/login`, {
+      >(`${API_URL}/auth/login`, {
         email,
         password,
         appMode: isClientContext() ? 'client' : 'admin',

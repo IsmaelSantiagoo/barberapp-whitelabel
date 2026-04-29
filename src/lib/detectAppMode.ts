@@ -42,10 +42,10 @@ export function isClientContext(): boolean {
  * Retorna o caminho de redirecionamento baseado no role do usuário.
  * - owner/admin → /admin/dashboard
  * - user (ou qualquer outro) → /client/home
- * - sem role → /agendafy/auth/login
+ * - sem role → /auth/login
  */
 export function getRedirectPathByRole(userRole?: string | null): string {
-  if (!userRole) return '/agendafy/auth/login'
+  if (!userRole) return '/auth/login'
 
   const adminRoles = ['admin', 'owner']
   if (adminRoles.includes(userRole.toLowerCase())) {
