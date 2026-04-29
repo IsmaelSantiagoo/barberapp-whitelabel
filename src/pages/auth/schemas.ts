@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { isClientContext } from '@/lib/detectAppMode'
+import detectAppMode, { isClientContext } from '@/lib/detectAppMode'
 
 export const schema = (registering: boolean) =>
   z
@@ -52,7 +52,7 @@ export const schema = (registering: boolean) =>
     )
     .refine((data) => {
       // apenas valida telefone se estiver registrando
-      if (registering) {
+      if (registering && detectAppMode() === 'client') {
         return !!data.telefone && data.telefone.trim().length > 0
       }
       return true
